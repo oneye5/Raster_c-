@@ -83,11 +83,16 @@ struct Triangle
 };
 struct Mesh
 {
+	Vector3 pos;
+	Vector3 rot;
 	vector<Triangle> triangles;
-	Mesh(vector<Triangle> tris)
+	Mesh(vector<Triangle> tris,Vector3 position = Vector3(0,0,2) ,Vector3 rotation = Vector3(0,0,0))
 	{
+		pos = position;
+		rot = rotation;
 		triangles = tris;
 	}
+
 };
 Mesh cubeMesh()
 {
@@ -209,4 +214,35 @@ void multiplyMatrixVector(Vector3& input, Vector3& output, Matrix4x4& matrix)
 		output.y /= w;
 		output.z /= w;
 	}
+}
+void normToScreen(int w, int h, float& x,float& y)
+{
+	auto pos = Vector2
+	(
+		(x + 1.0f) * ((float)w / 2.0f),
+		(y + 1.0f) * ((float)h / 2.0f)
+	);
+
+	pos = Vector2(roundf(pos.x), roundf(pos.y));
+	x = pos.x;
+	y = pos.y;
+}
+void normToScreen(int w, int h,Triangle& t)
+{
+	for (auto& v : t.verticies)
+	{
+		normToScreen(w, h, v.x, v.y);
+	}
+}
+Mesh translate(Vector3 v, Mesh m)
+{
+	auto& t = m.triangles;
+	for (auto& tri : t)
+	{
+		for (auto& ver : tri.verticies)
+		{
+			ver = v + ver;
+		}
+	}
+	return m;
 }

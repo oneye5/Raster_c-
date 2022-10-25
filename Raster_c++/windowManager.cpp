@@ -1,5 +1,5 @@
 #include "windowManager.h"
-
+#include <iostream>
 
 int WindowWidth = 1000;
 int WindowHeight = 500;
@@ -7,6 +7,8 @@ int WindowHeight = 500;
 bool running = true;
 ALLEGRO_DISPLAY* Display;
 ALLEGRO_EVENT_QUEUE* Queue;
+ViewPort vp;
+
 void WindowManager::initWindow()
 {
 	al_init();
@@ -20,21 +22,20 @@ void WindowManager::initWindow()
 }
 void WindowManager::initRenderer()
 {
+	vp = ViewPort();
+	vp.InitViewPort(WindowWidth,WindowHeight);
+	vp.InitGeometry();
+}
 
-}
-void Render()
-{
-	al_draw_pixel(0,0, al_map_rgb(255,255,255));
-}
 void WindowManager::windowLoop()
 
 {
 #pragma endregion
 	do
 	{
-		Render();
+		vp.render();
 		al_flip_display();
-
+		std::cout << "frame";
 		//event handeling
 #pragma region eventHandler
 			

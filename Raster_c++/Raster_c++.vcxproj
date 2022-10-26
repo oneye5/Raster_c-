@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Game.cpp" />
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="windowManager.cpp" />
     <ClCompile Include="winEntry.cpp" />
@@ -162,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3dMethods.h" />
+    <ClInclude Include="Game.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="windowManager.h" />
     <ClInclude Include="winEntry.h" />

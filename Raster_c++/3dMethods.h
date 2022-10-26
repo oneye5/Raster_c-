@@ -234,15 +234,4 @@ void normToScreen(int w, int h,Triangle& t)
 		normToScreen(w, h, v.x, v.y);
 	}
 }
-Mesh translate(Vector3 v, Mesh m)
-{
-	auto& t = m.triangles;
-	for (auto& tri : t)
-	{
-		for (auto& ver : tri.verticies)
-		{
-			ver = v + ver;
-		}
-	}
-	return m;
-}
+

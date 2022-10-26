@@ -1,12 +1,12 @@
 #pragma once
 #include "allegro5/allegro_primitives.h"
 #include "allegro5/allegro.h"
-#include "renderer.h"
+#include <vector>
 #define WINDOWMANAGER
 static class WindowManager
 {
 public:
 	void initWindow();
-	void initRenderer();
-	void windowLoop();
+	int windowTick();
+	std::vector< int> getSetWindow(int setw = -1, int seth = -1);
 }windowManager;

@@ -1,11 +1,1 @@
-﻿  Game.cpp
-  renderer.cpp
-C:\Users\ocjla\source\repos\Raster_CPP\Raster_c++\3dMethods.h(61,13): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-C:\Users\ocjla\source\repos\Raster_CPP\Raster_c++\3dMethods.h(65,13): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-  windowManager.cpp
-  winEntry.cpp
-  Generating code
-  Previous IPDB not found, fall back to full compilation.
-  All 305 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
-  Finished generating code
-  Raster_c++.vcxproj -> C:\Users\ocjla\source\repos\Raster_CPP\x64\Release\Raster_c++.exe
+﻿  Raster_c++.vcxproj -> C:\Users\ocjla\source\repos\Raster_c++\x64\Release\Raster_c++.exe

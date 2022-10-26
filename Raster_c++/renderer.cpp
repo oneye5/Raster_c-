@@ -75,6 +75,20 @@ void ViewPort::render()
 			{
 				ver = ver + obj.pos;
 			}
+			//============================================= calc normals =======================================
+
+			Vector3 norm, l1, l2;
+			l1.x = translated.verticies[1].x - translated.verticies[0].x;
+			l1.x = translated.verticies[1].y - translated.verticies[0].y;
+			l1.x = translated.verticies[1].z - translated.verticies[0].z;
+
+			l2.x = translated.verticies[2].x - translated.verticies[0].x;
+			l2.x = translated.verticies[2].y - translated.verticies[0].y;
+			l2.x = translated.verticies[2].z - translated.verticies[0].z;
+
+			norm.x = l1.y * l2.z - l1.z * l2.y;
+			norm.y = l1.z * l2.x - l1.x * l2.z;
+			norm.z = l1.x * l2.y - l1.y * l2.x;
 			//============================================== project and draw =================================== 
 
 			multiplyMatrixVector(translated.verticies[0], projected.verticies[0], projMatrix);

@@ -10,6 +10,6 @@ int main()
 	{
 		if (game.Update() == -1)
 			running = false;
-		///Sleep(1);
+		Sleep(6);
 	}
 }

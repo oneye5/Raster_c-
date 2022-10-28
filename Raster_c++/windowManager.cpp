@@ -1,8 +1,8 @@
 #include "windowManager.h"
 #include <iostream>
 
-int WindowWidth = 1920;
-int WindowHeight = 1080;
+int WindowWidth = 1600;
+int WindowHeight = 900;
 
 bool running = true;
 ALLEGRO_DISPLAY* Display;
@@ -15,7 +15,7 @@ void WindowManager::initWindow()
 	al_init_primitives_addon();
 	Queue = al_create_event_queue();
 	
-	al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+	//al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
 	Display = al_create_display(WindowWidth, WindowHeight);
 	al_install_keyboard();
 
@@ -33,10 +33,12 @@ int WindowManager::windowTick()
 #pragma region eventHandler
 			
 			ALLEGRO_EVENT Event;
-			al_wait_for_event(Queue, &Event);
-			if (Event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
-				running = false;
-			
+			if (!al_is_event_queue_empty(Queue))
+			{
+				al_wait_for_event(Queue, &Event);
+				if (Event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+					running = false;
+			}
 #pragma endregion
 			if (running == true)
 				return 1;

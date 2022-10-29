@@ -1,7 +1,6 @@
 #pragma once
 #include<vector>
 
-
 class ViewPort
 {
 public:
@@ -15,4 +14,8 @@ public:
 	void setPosition(int index, float x, float y, float z);
 	void rotate(int index, float x, float y, float z);
 	void setRotation(int index, float x, float y, float z);
+
+	void camSetPos(float x, float y, float z);
+	void camSetRot(float x, float y, float z);
+
 };

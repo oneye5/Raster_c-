@@ -236,23 +236,23 @@ struct Matrix4x4
 		return matrix;
 	}
 };
-Vector4 multiplyMatrixVector( Matrix4x4& matrix,Vector4& input)
+Vector4 multiplyMatrixVector( Matrix4x4& matrix,Vector4& Input)
 {
 	Vector4 v;
-	v.y = input.x * matrix.m[0][1] + input.y * matrix.m[1][1] + input.z * matrix.m[2][1] + input.w * matrix.m[3][1];
-	v.z = input.x * matrix.m[0][2] + input.y * matrix.m[1][2] + input.z * matrix.m[2][2] + input.w * matrix.m[3][2];
-	v.x = input.x * matrix.m[0][0] + input.y * matrix.m[1][0] + input.z * matrix.m[2][0] + input.w * matrix.m[3][0];
-	v.w = input.x * matrix.m[0][3] + input.y * matrix.m[1][3] + input.z * matrix.m[2][3] + input.w * matrix.m[3][3];
+	v.y = Input.x * matrix.m[0][1] + Input.y * matrix.m[1][1] + Input.z * matrix.m[2][1] + Input.w * matrix.m[3][1];
+	v.z = Input.x * matrix.m[0][2] + Input.y * matrix.m[1][2] + Input.z * matrix.m[2][2] + Input.w * matrix.m[3][2];
+	v.x = Input.x * matrix.m[0][0] + Input.y * matrix.m[1][0] + Input.z * matrix.m[2][0] + Input.w * matrix.m[3][0];
+	v.w = Input.x * matrix.m[0][3] + Input.y * matrix.m[1][3] + Input.z * matrix.m[2][3] + Input.w * matrix.m[3][3];
 	return v;
 }
 Vector4 multiplyMatrixVector(Matrix4x4& matrix ,Vector3& in)
 {
 	Vector4 v;
-	Vector4 input = Vector4(in.x, in.y, in.z, 1.0f);
-	v.y = input.x * matrix.m[0][1] + input.y * matrix.m[1][1] + input.z * matrix.m[2][1] + input.w * matrix.m[3][1];
-	v.z = input.x * matrix.m[0][2] + input.y * matrix.m[1][2] + input.z * matrix.m[2][2] + input.w * matrix.m[3][2];
-	v.x = input.x * matrix.m[0][0] + input.y * matrix.m[1][0] + input.z * matrix.m[2][0] + input.w * matrix.m[3][0];
-	v.w = input.x * matrix.m[0][3] + input.y * matrix.m[1][3] + input.z * matrix.m[2][3] + input.w * matrix.m[3][3];
+	Vector4 Input = Vector4(in.x, in.y, in.z, 1.0f);
+	v.y = Input.x * matrix.m[0][1] + Input.y * matrix.m[1][1] + Input.z * matrix.m[2][1] + Input.w * matrix.m[3][1];
+	v.z = Input.x * matrix.m[0][2] + Input.y * matrix.m[1][2] + Input.z * matrix.m[2][2] + Input.w * matrix.m[3][2];
+	v.x = Input.x * matrix.m[0][0] + Input.y * matrix.m[1][0] + Input.z * matrix.m[2][0] + Input.w * matrix.m[3][0];
+	v.w = Input.x * matrix.m[0][3] + Input.y * matrix.m[1][3] + Input.z * matrix.m[2][3] + Input.w * matrix.m[3][3];
 	return v;
 }
 Matrix4x4 getRotMatZ(float zRad)
@@ -405,12 +405,36 @@ float magnitude(Vector3 v)
 {
 	return sqrtf(toDotProduct(v, v));
 }
-void devXYbyZ(Triangle& tri)
+Matrix4x4 matPointAt(Vector3 pos, Vector3 target, Vector3 up)
 {
-	for (auto& v : tri.verticies)
-	{
-		float d = v.z;
-		v.x = v.x / d;
-		v.y = v.y / d;
-	}
+	Vector3 newForward = target - pos;
+	toNormalized(newForward);
+
+	// new up 
+
+	Vector3 v = newForward * toDotProduct(up, newForward);
+	Vector3 newUp = up - v;
+	toNormalized(newUp);
+
+	//right
+	Vector3 newRight = crossProduct(newUp, newForward);
+
+	Matrix4x4 matrix;
+	matrix.m[0][0] = newRight.x;	matrix.m[0][1] = newRight.y;	matrix.m[0][2] = newRight.z;	matrix.m[0][3] = 0.0f;
+	matrix.m[1][0] = newUp.x;		matrix.m[1][1] = newUp.y;		matrix.m[1][2] = newUp.z;		matrix.m[1][3] = 0.0f;
+	matrix.m[2][0] = newForward.x;	matrix.m[2][1] = newForward.y;	matrix.m[2][2] = newForward.z;	matrix.m[2][3] = 0.0f;
+	matrix.m[3][0] = pos.x;			matrix.m[3][1] = pos.y;			matrix.m[3][2] = pos.z;			matrix.m[3][3] = 1.0f;
+		return matrix;
+}
+Matrix4x4 matInverse(Matrix4x4& m)
+{
+	Matrix4x4 matrix;
+	matrix.m[0][0] = m.m[0][0]; matrix.m[0][1] = m.m[1][0]; matrix.m[0][2] = m.m[2][0]; matrix.m[0][3] = 0.0f;
+	matrix.m[1][0] = m.m[0][1]; matrix.m[1][1] = m.m[1][1]; matrix.m[1][2] = m.m[2][1]; matrix.m[1][3] = 0.0f;
+	matrix.m[2][0] = m.m[0][2]; matrix.m[2][1] = m.m[1][2]; matrix.m[2][2] = m.m[2][2]; matrix.m[2][3] = 0.0f;
+	matrix.m[3][0] = -(m.m[3][0] * matrix.m[0][0] + m.m[3][1] * matrix.m[1][0] + m.m[3][2] * matrix.m[2][0]);
+	matrix.m[3][1] = -(m.m[3][0] * matrix.m[0][1] + m.m[3][1] * matrix.m[1][1] + m.m[3][2] * matrix.m[2][1]);
+	matrix.m[3][2] = -(m.m[3][0] * matrix.m[0][2] + m.m[3][1] * matrix.m[1][2] + m.m[3][2] * matrix.m[2][2]);
+	matrix.m[3][3] = 1.0f;
+	return matrix;
 }

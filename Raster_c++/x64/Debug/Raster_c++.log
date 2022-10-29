@@ -1,5 +1,2 @@
-﻿  renderer.cpp
-C:\Users\ocjla\source\repos\Raster_c++\Raster_c++\3dMethods.h(133,13): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-C:\Users\ocjla\source\repos\Raster_c++\Raster_c++\3dMethods.h(137,13): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-C:\Users\ocjla\source\repos\Raster_c++\Raster_c++\3dMethods.h(283,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  Raster_c++.vcxproj -> C:\Users\ocjla\source\repos\Raster_c++\x64\Debug\Raster_c++.exe
+﻿  Game.cpp
+  Raster_c++.vcxproj -> C:\Users\ocjla\source\repos\Raster_cpp\x64\Debug\Raster_c++.exe

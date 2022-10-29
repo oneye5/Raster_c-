@@ -19,7 +19,7 @@ Matrix4x4 projMatrix;
  vector<Mesh>geometry;
  directionLight dirLight;
  Vector3 camPos;
-
+ Vector3 camRot = Vector3(0.0f, 0.0f, 1.0f);
 
 void ViewPort::InitViewPort(int ScreenWidth, int ScreenHeight)
 {
@@ -34,7 +34,7 @@ void ViewPort::InitGeometry()
 {
 	geometry = vector<Mesh>{Mesh()};
 	geometry[0].loadFromObj(tempDirectoryToMesh);
-	geometry[0].pos = Vector3(0.0f, 0.0f, 3.0f);
+	geometry[0].pos = Vector3(0.0f, 0.0f, 5.0f);
 
 	dirLight = directionLight();
 	dirLight.lumens = 90;
@@ -56,9 +56,14 @@ void ViewPort::render()
 			transform = matrixRotZ * matrixRotX;
 			transform = transform * offset;
 
+			Vector3 camUp = Vector3(0.0f, 1.0f, 0.0f);
+			Vector3 camTarget = camPos + camRot;
+			Matrix4x4 camMat = matPointAt(camPos, camTarget, camUp);
+			Matrix4x4 viewMat = matInverse(camMat);
+
 		for (auto tri : obj.triangles)
 		{
-			Triangle projected, translated;
+			Triangle projected, translated,viewed;
 			
 			translated.verticies[0] =  multiplyMatrixVector(transform, tri.verticies[0]);
 			translated.verticies[1] =  multiplyMatrixVector(transform, tri.verticies[1]);
@@ -87,11 +92,15 @@ void ViewPort::render()
 				float brightness = dotPod * dirLight.lumens;
 				brightness = clamp(brightness, 0, 255, true);
 				projected.col = Color(brightness, brightness , brightness);
+				//============================================== wolrd to view space ===========================
+				viewed.verticies[0] = multiplyMatrixVector(viewMat, projected.verticies[0]);
+				viewed.verticies[1] = multiplyMatrixVector(viewMat, projected.verticies[1]);
+				viewed.verticies[2] = multiplyMatrixVector(viewMat, projected.verticies[2]);
 				//============================================== project  =================================== 
 
-				projected.verticies[0]=  multiplyMatrixVector(projMatrix,projected.verticies[0]);
-				projected.verticies[1] = multiplyMatrixVector(projMatrix, projected.verticies[1]);
-				projected.verticies[2] = multiplyMatrixVector(projMatrix, projected.verticies[2]);
+				projected.verticies[0]=  multiplyMatrixVector(projMatrix, viewed.verticies[0]);
+				projected.verticies[1] = multiplyMatrixVector(projMatrix, viewed.verticies[1]);
+				projected.verticies[2] = multiplyMatrixVector(projMatrix, viewed.verticies[2]);
 
 				projected.verticies[0] = projected.verticies[0] / projected.verticies[0].w;
 				projected.verticies[1] = projected.verticies[1] / projected.verticies[1].w;
@@ -128,6 +137,7 @@ void ViewPort::render()
 	}
 }
 
+#pragma region game renderer interaction
 void ViewPort::translate(int index, float x, float y, float z)
 {
 	auto& g = geometry[0];
@@ -152,5 +162,15 @@ void ViewPort::setRotation(int index, float x, float y, float z)
 	g.rot = Vector3(x, y, z);
 }
 
+void ViewPort::camSetPos(float x, float y, float z)
+{
+	camPos = Vector3(x, y, z);
+}
 
+void ViewPort::camSetRot(float x, float y, float z)
+{
+	camRot = Vector3(x, y, z);
+}
+
+#pragma endregion
 

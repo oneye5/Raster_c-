@@ -9,4 +9,5 @@ public:
 	void initWindow();
 	int windowTick();
 	std::vector< int> getSetWindow(int setw = -1, int seth = -1);
+	ALLEGRO_DISPLAY* getDisplay();
 }windowManager;

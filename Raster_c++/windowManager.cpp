@@ -18,6 +18,8 @@ void WindowManager::initWindow()
 	//al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
 	Display = al_create_display(WindowWidth, WindowHeight);
 	al_install_keyboard();
+	al_install_mouse();
+	al_grab_mouse(Display);
 
 	al_register_event_source(Queue, al_get_keyboard_event_source());
 	al_register_event_source(Queue, al_get_display_event_source(Display));
@@ -44,10 +46,17 @@ int WindowManager::windowTick()
 				return 1;
 	al_destroy_display(Display);
 	al_uninstall_keyboard();
+	al_ungrab_mouse();
+	al_uninstall_mouse();
 	return -1;
 }
 
 std::vector<int> WindowManager::getSetWindow(int setw,int seth)
 {
 	return std::vector<int>{WindowWidth,WindowHeight};
+}
+
+ALLEGRO_DISPLAY* WindowManager::getDisplay()
+{
+	return Display;
 }

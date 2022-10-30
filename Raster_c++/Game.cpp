@@ -1,5 +1,5 @@
 #include "Game.h"
-#include "windowManager.h"
+
 #include"renderer.h"
 #include<windows.system.threading.h>
 
@@ -30,9 +30,11 @@ void Game::Start()
 
 int Game::Update() 
 {
-	input.tick();
+	input.tick(windowManager.getDisplay());
 	gameCamPos = gameCamPos + (Vector3(input.x, input.y, input.z) * moveMulti);
-	gameCamRot = gameCamRot + Vector3(input.mx, input.my, 0.0f);
+	gameCamRot = gameCamRot + Vector3(input.my, input.mx, 0.0f);
+	
+	std::cout << gameCamRot.x << " " << gameCamRot.y << "\n";
 	
 	vp.rotate(0, 0.05f, 0.0f, 0.0f);
 

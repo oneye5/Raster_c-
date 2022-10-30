@@ -1,6 +1,8 @@
 #pragma once
 #include <windows.h>  
+#include "windowManager.h"
 #include"allegro5/allegro5.h"
+#include <iostream>
 class Game
 {
 public:
@@ -22,9 +24,9 @@ struct Input
 
 	int mousePosX = 0;
 	int mousePosY = 0;
-	void tick()
+	void tick(ALLEGRO_DISPLAY* d)
 	{
-		float deltaMouseDiv = 50.0f;
+		float deltaMouseDiv = 10.0f;
 		int newMousePosX;
 		int newMousePosY;
 
@@ -35,11 +37,18 @@ struct Input
 		mx = newMousePosX - mousePosX;
 		my = newMousePosY - mousePosY;
 
+
+
+		int setx = al_get_display_width(d) / 2.0f;
+		int sety = al_get_display_height(d) / 2.0f;
+		SetPhysicalCursorPos(setx,sety);
+
 		mx /= deltaMouseDiv;
 		my /= deltaMouseDiv;
 
-		mousePosX = newMousePosX;
-		mousePosY = newMousePosY;
+
+		mousePosX = setx;
+		mousePosY = sety;
 
 		x = 0.0f;
 		y = 0.0f;

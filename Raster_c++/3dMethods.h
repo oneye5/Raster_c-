@@ -8,6 +8,7 @@
 
 using std::vector;
 
+
 struct Vector4
 {
 public:
@@ -15,7 +16,7 @@ public:
 	float y;
 	float z;
 	float w;
-	Vector4(float X = 0, float Y = 0, float Z = 0,float W = 0)
+	Vector4(float X = 0, float Y = 0, float Z = 0,float W = 1.0f)
 	{
 		x = X;
 		y = Y;
@@ -153,10 +154,14 @@ struct Color
 		b = 255;
 	};
 };
+struct triColInfo
+{
+	Color col;
+};
 struct Triangle
 {
 	vector< Vector4> verticies;
-	Color col;
+	triColInfo colInfo;
 	Triangle(vector<Vector4> v)
 	{
 		verticies = v;
@@ -265,6 +270,17 @@ Matrix4x4 getRotMatZ(float zRad)
 	matrixRotZ.m[2][2] = 1;
 	matrixRotZ.m[3][3] = 1;
 	return matrixRotZ;
+}
+Matrix4x4 getRotMatY(float yRad)
+{
+	Matrix4x4 matrix;
+	matrix.m[0][0] = cosf(yRad);
+	matrix.m[0][2] = sinf(yRad);
+	matrix.m[2][0] = -sinf(yRad);
+	matrix.m[1][1] = 1.0f;
+	matrix.m[2][2] = cosf(yRad);
+	matrix.m[3][3] = 1.0f;
+	return matrix;
 }
 Matrix4x4 getRotMatX(float xRad)
 {
@@ -437,4 +453,148 @@ Matrix4x4 matInverse(Matrix4x4& m)
 	matrix.m[3][2] = -(m.m[3][0] * matrix.m[0][2] + m.m[3][1] * matrix.m[1][2] + m.m[3][2] * matrix.m[2][2]);
 	matrix.m[3][3] = 1.0f;
 	return matrix;
+}
+
+Vector3 rayFromAngle(Vector2 A)
+{
+	Vector3 pos
+	(
+		sinf(degToRad(A.y)) * cosf(degToRad(A.x)),
+		cosf(degToRad(A.x)),
+		cosf(degToRad(A.y)) * cosf(degToRad(A.x))
+	);
+	return pos;
+}
+
+
+Vector3 intersectPlane(Vector3& plane_p, Vector3& plane_n, Vector3& lineStart, Vector3& lineEnd)
+{
+	toNormalized(plane_n);
+	float plane_d = -toDotProduct(plane_n, plane_p);
+	float ad = toDotProduct(lineStart, plane_n);
+	float bd = toDotProduct(lineEnd, plane_n);
+	float t = (-plane_d - ad) / (bd - ad);
+	Vector3 lineStartToEnd = lineEnd - lineStart;
+	Vector3 lineToIntersect = lineStartToEnd * t;
+	return lineStart + lineToIntersect;
+}
+
+Vector3 intersectPlane(Vector3& plane_p, Vector3& plane_n, Vector4& lineStart4, Vector4& lineEnd4)
+{
+	auto lineStart = Vector3(lineStart4);
+	auto lineEnd = Vector3(lineEnd4);
+	toNormalized(plane_n);
+	float plane_d = -toDotProduct(plane_n, plane_p);
+	float ad = toDotProduct(lineStart, plane_n);
+	float bd = toDotProduct(lineEnd, plane_n);
+	float t = (-plane_d - ad) / (bd - ad);
+	Vector3 lineStartToEnd = lineEnd - lineStart;
+	Vector3 lineToIntersect = lineStartToEnd * t;
+	return lineStart + lineToIntersect;
+}
+
+
+
+float dist(Vector4& p, Vector3 plane_n,Vector3 plane_p)
+{
+	Vector3 n = Vector3(p);
+	toNormalized(n);
+	return (plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - toDotProduct(plane_n, plane_p));
+}
+
+int Triangle_ClipAgainstPlane(Vector3 plane_p, Vector3 plane_n, Triangle& in_tri, Triangle& out_tri1, Triangle& out_tri2)
+{
+	// Make sure plane normal is indeed normal
+	toNormalized(plane_n);
+
+	// Create two temporary storage arrays to classify points either side of plane
+	// If distance sign is positive, point lies on "inside" of plane
+	Vector4* inside_points[3];  int nInsidePointCount = 0;
+	Vector4* outside_points[3]; int nOutsidePointCount = 0;
+
+	// Get signed distance of each point in triangle to plane
+	float d0 = dist(in_tri.verticies[0],plane_n,plane_p);
+	float d1 = dist(in_tri.verticies[1],plane_n,plane_p);
+	float d2 = dist(in_tri.verticies[2],plane_n,plane_p);
+
+	if (d0 >= 0) { inside_points[nInsidePointCount++] = &in_tri.verticies[0]; }
+	else { outside_points[nOutsidePointCount++] = &in_tri.verticies[0]; }
+	if (d1 >= 0) { inside_points[nInsidePointCount++] = &in_tri.verticies[1]; }
+	else { outside_points[nOutsidePointCount++] = &in_tri.verticies[1]; }
+	if (d2 >= 0) { inside_points[nInsidePointCount++] = &in_tri.verticies[2]; }
+	else { outside_points[nOutsidePointCount++] = &in_tri.verticies[2]; }
+
+	// Now classify triangle points, and break the input triangle into 
+	// smaller output triangles if required. There are four possible
+	// outcomes...
+
+	if (nInsidePointCount == 0)
+	{
+		// All points lie on the outside of plane, so clip whole triangle
+		// It ceases to exist
+
+		return 0; // No returned triangles are valid
+	}
+
+	if (nInsidePointCount == 3)
+	{
+		// All points lie on the inside of plane, so do nothing
+		// and allow the triangle to simply pass through
+		out_tri1 = in_tri;
+
+		return 1; // Just the one returned original triangle is valid
+	}
+
+	if (nInsidePointCount == 1 && nOutsidePointCount == 2)
+	{
+		// Triangle should be clipped. As two points lie outside
+		// the plane, the triangle simply becomes a smaller triangle
+
+		// Copy appearance info to new triangle
+		out_tri1.colInfo = in_tri.colInfo;
+
+
+		// The inside point is valid, so keep that...
+		out_tri1.verticies[0] = *inside_points[0];
+
+		// but the two new points are at the locations where the 
+		// original sides of the triangle (lines) intersect with the plane
+	
+
+		auto temp1 = intersectPlane(plane_p, plane_n,  *inside_points[0], *outside_points[0]) ;
+		auto temp2 = intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[1]);
+
+		out_tri1.verticies[1] = Vector4( temp1.x,temp1.y,temp1.z);
+		out_tri1.verticies[2] = Vector4(temp2.x, temp2.y, temp2.z);
+
+		return 1; // Return the newly formed single triangle
+	}
+
+	if (nInsidePointCount == 2 && nOutsidePointCount == 1)
+	{
+		// Triangle should be clipped. As two points lie inside the plane,
+		// the clipped triangle becomes a "quad". Fortunately, we can
+		// represent a quad with two new triangles
+
+		// Copy appearance info to new triangles
+		out_tri1.colInfo = in_tri.colInfo;
+
+		out_tri2.colInfo = in_tri.colInfo;
+
+		// The first triangle consists of the two inside points and a new
+		// point determined by the location where one side of the triangle
+		// intersects with the plane
+		out_tri1.verticies[0] = *inside_points[0];
+		out_tri1.verticies[1] = *inside_points[1];
+		 auto temp1 = intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[0]);
+		 out_tri1.verticies[2] = Vector4(temp1.x, temp1.y, temp1.z);
+		// The second triangle is composed of one of he inside points, a
+		// new point determined by the intersection of the other side of the 
+		// triangle and the plane, and the newly created point above
+		out_tri2.verticies[0] = *inside_points[1];
+		out_tri2.verticies[1] = out_tri1.verticies[2];
+		auto temp2 = intersectPlane(plane_p, plane_n, *inside_points[1], *outside_points[0]);
+		out_tri2.verticies[2] = Vector4(temp2.x,temp2.y,temp2.z);
+		return 2; // Return two newly formed triangles which form a quad
+	}
 }

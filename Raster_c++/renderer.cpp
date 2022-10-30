@@ -47,6 +47,8 @@ void ViewPort::render()
 	for (auto obj : geometry)
 	{
 		//================================================= rotate & translate =====================================
+		
+
 		Matrix4x4 matrixRotZ, matrixRotX;
 		matrixRotZ = getRotMatZ(obj.rot.z);
 		matrixRotX = getRotMatX(obj.rot.x);
@@ -57,8 +59,12 @@ void ViewPort::render()
 			transform = transform * offset;
 
 			Vector3 camUp = Vector3(0.0f, 1.0f, 0.0f);
-			Vector3 camTarget = camPos + camRot;
+			Vector3 camTarget = Vector3(0,0,1);
+			Matrix4x4 camMatRot = getRotMatY(camRot.y);
+			Vector3 lookDir = multiplyMatrixVector(camMatRot, camTarget);
+			camTarget = camPos + lookDir;
 			Matrix4x4 camMat = matPointAt(camPos, camTarget, camUp);
+			
 			Matrix4x4 viewMat = matInverse(camMat);
 
 		for (auto tri : obj.triangles)
@@ -91,7 +97,7 @@ void ViewPort::render()
 
 				float brightness = dotPod * dirLight.lumens;
 				brightness = clamp(brightness, 0, 255, true);
-				projected.col = Color(brightness, brightness , brightness);
+				projected.colInfo.col = Color(brightness, brightness , brightness);
 				//============================================== wolrd to view space ===========================
 				viewed.verticies[0] = multiplyMatrixVector(viewMat, projected.verticies[0]);
 				viewed.verticies[1] = multiplyMatrixVector(viewMat, projected.verticies[1]);
@@ -132,7 +138,7 @@ void ViewPort::render()
 			Projected.verticies[2].x,
 			Projected.verticies[2].y,
 
-			al_map_rgb(Projected.col.r, Projected.col.g, Projected.col.b)
+			al_map_rgb(Projected.colInfo.col.r, Projected.colInfo.col.g, Projected.colInfo.col.b)
 		);
 	}
 }

@@ -5,7 +5,10 @@
 #include<fstream>
 #include<strstream>
 #include<string>
-
+#include "allegro5/allegro_primitives.h"
+#include "allegro5/allegro.h"
+#include "allegro5/bitmap.h"
+#include"allegro5/allegro_image.h"
 using std::vector;
 
 
@@ -64,69 +67,79 @@ public:
 		return Vector4(x, y, z,w);
 	}
 };
-struct Vector3
+struct vector3
 {
 public:
 	float x;
 	float y;
 	float z;
-	Vector3(float X = 0, float Y = 0, float Z = 0)
+	vector3(float X = 0, float Y = 0, float Z = 0)
 	{
 		x = X;
 		y = Y;
 		z = Z;
 	}
-	Vector3(Vector4 v)
+	vector3(Vector4 v)
 	{
 		x = v.x;
 		y = v.y;
 		z = v.z;
 	}
-	friend Vector3 operator+(const Vector3& v1, const Vector3& v2)
+	friend vector3 operator+(const vector3& v1, const vector3& v2)
 	{
 		float x = v1.x + v2.x;
 		float y = v1.y + v2.y;
 		float z = v1.z + v2.z;
-		return Vector3(x, y, z);
+		return vector3(x, y, z);
 	}
-	friend Vector3 operator-(const Vector3& v1, const Vector3& v2)
+	friend vector3 operator-(const vector3& v1, const vector3& v2)
 	{
 		float x = v1.x - v2.x;
 		float y = v1.y - v2.y;
 		float z = v1.z - v2.z;
-		return Vector3(x, y, z);
+		return vector3(x, y, z);
 	}
-	friend Vector3 operator*(const Vector3& v1, const Vector3& v2)
+	friend vector3 operator*(const vector3& v1, const vector3& v2)
 	{
 		float x = v1.x * v2.x;
 		float y = v1.y * v2.y;
 		float z = v1.z * v2.z;
-		return Vector3(x, y, z);
+		return vector3(x, y, z);
 	}
-	friend Vector3 operator*(const Vector3& v1, const float v2)
+	friend vector3 operator*(const vector3& v1, const float v2)
 	{
 		float x = v1.x * v2;
 		float y = v1.y * v2;
 		float z = v1.z * v2;
-		return Vector3(x, y, z);
+		return vector3(x, y, z);
 	}
-	friend Vector3 operator/(const Vector3& v1, const float v2)
+	friend vector3 operator/(const vector3& v1, const float v2)
 	{
 		float x = v1.x / v2;
 		float y = v1.y / v2;
 		float z = v1.z / v2;
-		return Vector3(x, y, z);
+		return vector3(x, y, z);
 	}
 };
-struct Vector2
+struct vector2
 {
 public:
 	float x;
 	float y;
-	Vector2(float X = 0, float Y = 0)
+	vector2(float X = 0, float Y = 0)
 	{
 		x = X;
 		y = Y;
+	}
+	vector2(Vector4 v)
+	{
+		x = v.x;
+		y = v.y;
+	}
+	vector2(vector3 v)
+	{
+		x = v.x;
+		y = v.y;
 	}
 };
 float radToDeg(float rad)
@@ -153,6 +166,12 @@ struct Color
 		g = 255;
 		b = 255;
 	};
+	Color(ALLEGRO_COLOR c)
+	{
+		r = c.r;
+		g = c.g;
+		b = c.b;
+	}
 };
 struct triColInfo
 {
@@ -162,6 +181,7 @@ struct Triangle
 {
 	vector< Vector4> verticies;
 	triColInfo colInfo;
+	vector<vector2> textureCoords = vector<vector2>{vector2(),vector2() ,vector2() };
 	Triangle(vector<Vector4> v)
 	{
 		verticies = v;
@@ -181,10 +201,10 @@ struct Triangle
 };
 struct Mesh
 {
-	Vector3 pos;
-	Vector3 rot;
+	vector3 pos;
+	vector3 rot;
 	vector<Triangle> triangles;
-	Mesh(vector<Triangle> tris,Vector3 position = Vector3(0,0,2) ,Vector3 rotation = Vector3(0,0,0))
+	Mesh(vector<Triangle> tris,vector3 position = vector3(0,0,2) ,vector3 rotation = vector3(0,0,0))
 	{
 		pos = position;
 		rot = rotation;
@@ -250,7 +270,7 @@ Vector4 multiplyMatrixVector( Matrix4x4& matrix,Vector4& Input)
 	v.w = Input.x * matrix.m[0][3] + Input.y * matrix.m[1][3] + Input.z * matrix.m[2][3] + Input.w * matrix.m[3][3];
 	return v;
 }
-Vector4 multiplyMatrixVector(Matrix4x4& matrix ,Vector3& in)
+Vector4 multiplyMatrixVector(Matrix4x4& matrix ,vector3& in)
 {
 	Vector4 v;
 	Vector4 Input = Vector4(in.x, in.y, in.z, 1.0f);
@@ -305,7 +325,7 @@ Matrix4x4 getProjectionMat(float fov, float aspectRatio,float farPlane, float ne
 	projMatrix.m[3][3] = 0.0f;
 	return projMatrix;
 }
-Matrix4x4 getTranslationMat(Vector3 pos)
+Matrix4x4 getTranslationMat(vector3 pos)
 {
 	Matrix4x4 matrix;
 	matrix.m[0][0] = 1.0f;
@@ -326,16 +346,15 @@ Matrix4x4 getEmptyMat()
 	matrix.m[3][3] = 1.0f;
 	return matrix;
 }
-
 void normToScreen(int w, int h, float& x,float& y)
 {
-	auto pos = Vector2
+	auto pos = vector2
 	(
 		(x + 1.0f) * ((float)w / 2.0f),
 		(y + 1.0f) * ((float)h / 2.0f)
 	);
 
-	pos = Vector2(roundf(pos.x), roundf(pos.y));
+	pos = vector2(roundf(pos.x), roundf(pos.y));
 	x = pos.x;
 	y = pos.y;
 }
@@ -346,20 +365,20 @@ void normToScreen(int w, int h,Triangle& t)
 		normToScreen(w, h, v.x, v.y);
 	}
 }
-void toNormalized(Vector3& v)
+void G_toNormalized(vector3& v)
 {
 	float magnitude = sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
 	if(magnitude != 0)
-	v = Vector3(v.x / magnitude, v.y / magnitude, v.z / magnitude);
+	v = vector3(v.x / magnitude, v.y / magnitude, v.z / magnitude);
 }
-void toDotProduct(Vector3 a /*must be normals*/, Vector3 b, Vector3 camPos, float& out)
+void toDotProduct(vector3 a /*must be normals*/, vector3 b, vector3 camPos, float& out)
 {
 	out =
 		a.x * (b.x - camPos.x) +
 		a.y * (b.y - camPos.y) +
 		a.z * (b.z - camPos.z);
 }
-float toDotProduct(Vector3 a /*must be normals*/, Vector3 b, Vector3 camPos)
+float toDotProduct(vector3 a /*must be normals*/, vector3 b, vector3 camPos)
 {
 	float	out =
 		a.x * (b.x - camPos.x) +
@@ -367,7 +386,7 @@ float toDotProduct(Vector3 a /*must be normals*/, Vector3 b, Vector3 camPos)
 		a.z * (b.z - camPos.z);
 	return out;
 }
-float toDotProduct(Vector3 a /*must be normals*/, Vector3 b)
+float toDotProduct(vector3 a /*must be normals*/, vector3 b)
 {
 	float	out =
 		a.x * (b.x) +
@@ -375,9 +394,9 @@ float toDotProduct(Vector3 a /*must be normals*/, Vector3 b)
 		a.z * (b.z);
 	return out;
 }
-Vector3 crossProduct(Vector3 v1, Vector3 v2)
+vector3 crossProduct(vector3 v1, vector3 v2)
 {
-	Vector3 v;
+	vector3 v;
 	v.x = v1.y * v2.z - v1.z * v2.y;
 	v.y = v1.z * v2.x - v1.x * v2.z;
 	v.z = v1.x * v2.y - v1.y * v2.x;
@@ -386,12 +405,12 @@ Vector3 crossProduct(Vector3 v1, Vector3 v2)
 struct directionLight
 {
 
-	Vector3 dir;
+	vector3 dir;
 	float lumens;
 	Color color;
 	directionLight() 
 	{
-		dir = Vector3(0, 0, 0);
+		dir = vector3(0, 0, 0);
 		lumens = 0.0f;
 		color = Color(255, 255, 255);
 	};
@@ -408,32 +427,32 @@ float clamp(float in, float min, float max, bool Round)
 	}
 	return in;
 }
-Vector3 averagePos(Triangle t)
+vector3 averagePos(Triangle t)
 {
-	Vector3 out;
+	vector3 out;
 	for (auto v : t.verticies)
 	{
 		out = out + v;
 	}
 	return out / 3.0f;
 }
-float magnitude(Vector3 v)
+float magnitude(vector3 v)
 {
 	return sqrtf(toDotProduct(v, v));
 }
-Matrix4x4 matPointAt(Vector3 pos, Vector3 target, Vector3 up)
+Matrix4x4 matPointAt(vector3 pos, vector3 target, vector3 up)
 {
-	Vector3 newForward = target - pos;
-	toNormalized(newForward);
+	vector3 newForward = target - pos;
+	G_toNormalized(newForward);
 
 	// new up 
 
-	Vector3 v = newForward * toDotProduct(up, newForward);
-	Vector3 newUp = up - v;
-	toNormalized(newUp);
+	vector3 v = newForward * toDotProduct(up, newForward);
+	vector3 newUp = up - v;
+	G_toNormalized(newUp);
 
 	//right
-	Vector3 newRight = crossProduct(newUp, newForward);
+	vector3 newRight = crossProduct(newUp, newForward);
 
 	Matrix4x4 matrix;
 	matrix.m[0][0] = newRight.x;	matrix.m[0][1] = newRight.y;	matrix.m[0][2] = newRight.z;	matrix.m[0][3] = 0.0f;
@@ -454,10 +473,9 @@ Matrix4x4 matInverse(Matrix4x4& m)
 	matrix.m[3][3] = 1.0f;
 	return matrix;
 }
-
-Vector3 rayFromAngle(Vector2 A)
+vector3 rayFromAngle(vector2 A)
 {
-	Vector3 pos
+	vector3 pos
 	(
 		sinf(degToRad(A.y)) * cosf(degToRad(A.x)),
 		cosf(degToRad(A.x)),
@@ -465,64 +483,98 @@ Vector3 rayFromAngle(Vector2 A)
 	);
 	return pos;
 }
-
-
-Vector3 intersectPlane(Vector3& plane_p, Vector3& plane_n, Vector3& lineStart, Vector3& lineEnd)
+vector3 intersectPlane(vector3& plane_p, vector3& plane_n, vector3& lineStart, vector3& lineEnd,float& t)
 {
-	toNormalized(plane_n);
+	G_toNormalized(plane_n);
 	float plane_d = -toDotProduct(plane_n, plane_p);
 	float ad = toDotProduct(lineStart, plane_n);
 	float bd = toDotProduct(lineEnd, plane_n);
-	float t = (-plane_d - ad) / (bd - ad);
-	Vector3 lineStartToEnd = lineEnd - lineStart;
-	Vector3 lineToIntersect = lineStartToEnd * t;
+	 t = (-plane_d - ad) / (bd - ad);
+	vector3 lineStartToEnd = lineEnd - lineStart;
+	vector3 lineToIntersect = lineStartToEnd * t;
 	return lineStart + lineToIntersect;
 }
-
-Vector3 intersectPlane(Vector3& plane_p, Vector3& plane_n, Vector4& lineStart4, Vector4& lineEnd4)
+vector3 intersectPlane(vector3& plane_p, vector3& plane_n, Vector4& lineStart4, Vector4& lineEnd4,float& t)
 {
-	auto lineStart = Vector3(lineStart4);
-	auto lineEnd = Vector3(lineEnd4);
-	toNormalized(plane_n);
+	auto lineStart = vector3(lineStart4);
+	auto lineEnd = vector3(lineEnd4);
+	G_toNormalized(plane_n);
 	float plane_d = -toDotProduct(plane_n, plane_p);
 	float ad = toDotProduct(lineStart, plane_n);
 	float bd = toDotProduct(lineEnd, plane_n);
-	float t = (-plane_d - ad) / (bd - ad);
-	Vector3 lineStartToEnd = lineEnd - lineStart;
-	Vector3 lineToIntersect = lineStartToEnd * t;
+	t = (-plane_d - ad) / (bd - ad);
+	vector3 lineStartToEnd = lineEnd - lineStart;
+	vector3 lineToIntersect = lineStartToEnd * t;
 	return lineStart + lineToIntersect;
 }
-
-
-
-float dist(Vector4& p, Vector3 plane_n,Vector3 plane_p)
+float dist(Vector4& p, vector3 plane_n,vector3 plane_p)
 {
-	Vector3 n = Vector3(p);
-	toNormalized(n);
+	vector3 n = vector3(p);
+	G_toNormalized(n);
 	return (plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - toDotProduct(plane_n, plane_p));
 }
-
-int Triangle_ClipAgainstPlane(Vector3 plane_p, Vector3 plane_n, Triangle& in_tri, Triangle& out_tri1, Triangle& out_tri2)
+int TriClipFromPlane(vector3 plane_p, vector3 plane_n, Triangle& in_tri, Triangle& out_tri1, Triangle& out_tri2)
 {
 	// Make sure plane normal is indeed normal
-	toNormalized(plane_n);
+	G_toNormalized(plane_n);
 
 	// Create two temporary storage arrays to classify points either side of plane
 	// If distance sign is positive, point lies on "inside" of plane
 	Vector4* inside_points[3];  int nInsidePointCount = 0;
 	Vector4* outside_points[3]; int nOutsidePointCount = 0;
 
+	Vector4* inside_texture[3]; int insideTexCount = 0;
+	Vector4* outside_texture[3]; int outsideTexCount = 0;
 	// Get signed distance of each point in triangle to plane
 	float d0 = dist(in_tri.verticies[0],plane_n,plane_p);
 	float d1 = dist(in_tri.verticies[1],plane_n,plane_p);
 	float d2 = dist(in_tri.verticies[2],plane_n,plane_p);
 
-	if (d0 >= 0) { inside_points[nInsidePointCount++] = &in_tri.verticies[0]; }
-	else { outside_points[nOutsidePointCount++] = &in_tri.verticies[0]; }
-	if (d1 >= 0) { inside_points[nInsidePointCount++] = &in_tri.verticies[1]; }
-	else { outside_points[nOutsidePointCount++] = &in_tri.verticies[1]; }
-	if (d2 >= 0) { inside_points[nInsidePointCount++] = &in_tri.verticies[2]; }
-	else { outside_points[nOutsidePointCount++] = &in_tri.verticies[2]; }
+	if (d0 >= 0) 
+	{
+		inside_points[nInsidePointCount] = &in_tri.verticies[0];
+		inside_texture[insideTexCount] = &in_tri.verticies[0];
+		insideTexCount++;
+		nInsidePointCount++;
+		
+	}
+	else 
+	{
+		outside_points[nOutsidePointCount] = &in_tri.verticies[0];
+		outside_texture[outsideTexCount] = &in_tri.verticies[0];
+		outsideTexCount++;
+		nOutsidePointCount++;
+	}
+
+	if (d1 >= 0)
+	{ 
+		inside_points[nInsidePointCount] = &in_tri.verticies[1];
+		inside_texture[insideTexCount] = &in_tri.verticies[1];
+		insideTexCount++;
+		nInsidePointCount++;
+	}
+	else 
+	{
+		outside_points[nOutsidePointCount] = &in_tri.verticies[1];
+		outside_texture[outsideTexCount] = &in_tri.verticies[1];
+		outsideTexCount++;
+		nOutsidePointCount++;
+	}
+
+	if (d2 >= 0)
+	{ 
+		inside_points[nInsidePointCount] = &in_tri.verticies[2];
+		inside_texture[insideTexCount] = &in_tri.verticies[2];
+		insideTexCount++;
+		nInsidePointCount++;
+	}
+	else 
+	{
+		outside_points[nOutsidePointCount] = &in_tri.verticies[2];
+		outside_texture[outsideTexCount] = &in_tri.verticies[2];
+		outsideTexCount++;
+		nOutsidePointCount++;
+	}
 
 	// Now classify triangle points, and break the input triangle into 
 	// smaller output triangles if required. There are four possible
@@ -556,13 +608,18 @@ int Triangle_ClipAgainstPlane(Vector3 plane_p, Vector3 plane_n, Triangle& in_tri
 
 		// The inside point is valid, so keep that...
 		out_tri1.verticies[0] = *inside_points[0];
-
+		out_tri1.textureCoords[0] = vector2(* inside_texture[0]);
 		// but the two new points are at the locations where the 
 		// original sides of the triangle (lines) intersect with the plane
 	
+		float t;
+		auto temp1 = intersectPlane(plane_p, plane_n,  *inside_points[0], *outside_points[0],t) ;
+		out_tri1.textureCoords[1] = t * (outside_points[0]->x - inside_texture[0]->x  ) + inside_texture[0]->x;
+		out_tri1.textureCoords[1] = t * (outside_points[0]->y - inside_texture[0]->y  ) + inside_texture[0]->y;
 
-		auto temp1 = intersectPlane(plane_p, plane_n,  *inside_points[0], *outside_points[0]) ;
-		auto temp2 = intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[1]);
+		auto temp2 = intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[1],t);
+		out_tri1.textureCoords[2] = t * (outside_points[0]->x - inside_texture[0]->x) + inside_texture[0]->x;
+		out_tri1.textureCoords[2] = t * (outside_points[0]->y - inside_texture[0]->y) + inside_texture[0]->y;
 
 		out_tri1.verticies[1] = Vector4( temp1.x,temp1.y,temp1.z);
 		out_tri1.verticies[2] = Vector4(temp2.x, temp2.y, temp2.z);
@@ -578,7 +635,6 @@ int Triangle_ClipAgainstPlane(Vector3 plane_p, Vector3 plane_n, Triangle& in_tri
 
 		// Copy appearance info to new triangles
 		out_tri1.colInfo = in_tri.colInfo;
-
 		out_tri2.colInfo = in_tri.colInfo;
 
 		// The first triangle consists of the two inside points and a new
@@ -586,15 +642,196 @@ int Triangle_ClipAgainstPlane(Vector3 plane_p, Vector3 plane_n, Triangle& in_tri
 		// intersects with the plane
 		out_tri1.verticies[0] = *inside_points[0];
 		out_tri1.verticies[1] = *inside_points[1];
-		 auto temp1 = intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[0]);
+		out_tri1.textureCoords[0]  = vector2(*inside_texture[0]);
+		out_tri1.textureCoords[1] = vector2(*inside_texture[1]);
+
+		float t;
+		 auto temp1 = intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[0],t);
 		 out_tri1.verticies[2] = Vector4(temp1.x, temp1.y, temp1.z);
 		// The second triangle is composed of one of he inside points, a
 		// new point determined by the intersection of the other side of the 
 		// triangle and the plane, and the newly created point above
 		out_tri2.verticies[0] = *inside_points[1];
 		out_tri2.verticies[1] = out_tri1.verticies[2];
-		auto temp2 = intersectPlane(plane_p, plane_n, *inside_points[1], *outside_points[0]);
+
+
+		auto temp2 = intersectPlane(plane_p, plane_n, *inside_points[1], *outside_points[0],t);
 		out_tri2.verticies[2] = Vector4(temp2.x,temp2.y,temp2.z);
 		return 2; // Return two newly formed triangles which form a quad
 	}
+}
+Color sampleTexture(vector2 v, ALLEGRO_BITMAP* t)
+{
+	int w=	al_get_bitmap_width(t);
+	int h = al_get_bitmap_height(t);
+
+	normToScreen(w, h, v.x, v.y);
+	int x = v.x;
+	int y = v.y;
+
+	return	al_get_pixel(t, x, y);
+}
+void textureTri(
+	int x1, int y1, float u1, float v1,
+	int x2, int y2, float u2, float v2,
+	int x3, int y3, float u3, float v3,ALLEGRO_BITMAP* texture)
+{
+	if (y2 < y1)
+	{
+		std::swap(y1, y2);
+		std::swap(x1, x2);
+		std::swap(u1, u2);
+		std::swap(v1, v2);
+	}
+	if (y3 < y1)
+	{
+		std::swap(y1, y3);
+		std::swap(x1, x3);
+		std::swap(u1, u3);
+		std::swap(v1, v3);
+	}
+	if (y3 < y2)
+	{
+		std::swap(y2, y3);
+		std::swap(x2, x3);
+		std::swap(u2, u3);
+		std::swap(v2, v3);
+	}
+
+	int dy1 = y2 - y1;
+	int dx1 = x2 - x1;
+	float dv1 = v2 - v1;
+	float du1 = u2 - u1;
+
+	int dy2 = y3 - y1;
+	int dx2 = x3 - x1;
+	float dv2 = v3 - v1;
+	float du2 = u3 - u1;
+
+	float texU, texV;
+
+	float daxStep = 0.0f;
+	float dbxStep = 0.0f;
+	float du1Step = 0.0f;
+	float dv1Step = 0.0f;
+	float du2Step = 0.0f;
+	float dv2Step = 0.0f;
+
+	if (dy1) daxStep = dx1 / (float)abs(dy1);
+	if (dy2) dbxStep = dx2 / (float)abs(dy2);
+
+
+	if (dy1) du1Step = du1 / (float)abs(dy1);
+	if (dy1) dv1Step = dx1 / (float)abs(dy1);
+
+	if (dy2) du2Step = du2 / (float)abs(dy2);
+	if (dy2) dv2Step = dx2 / (float)abs(dy2);
+
+	if (dy1)
+	{
+		for (int y = y1; y <= y2; y++)
+		{
+			int ax = x1 + (float)(y - y1) * daxStep;
+			int bx = x1 + (float)(y - y1) * dbxStep;
+
+			float texSu = u1 + (float)(y - y1) * du1Step; //starting values
+			float texSv = v1 + (float)(y - y1) * dv1Step;
+
+			float texEu = u1 + (float)(y - y1) * du2Step;
+			float texEv = v1 + (float)(y - y1) * du2Step;//ending values
+
+			if (ax > bx)
+			{
+				std::swap(ax, bx);
+				std::swap(texSu, texEu);
+				std::swap(texSv, texEv);
+			}
+
+			texU = texSu;
+			texV = texSv;
+
+			float tStep = 1.0f / ((float)(bx - ax));
+			float t = 0.0f; // where
+
+			for (int x = ax; x < bx; x++)
+			{
+				texU = (1.0f - t) * texSu + t * texEu;
+				texV = (1.0f - t) * texSu + t * texEv;
+
+				
+
+				//draw
+
+				auto c = sampleTexture(vector2(texU, texEv),texture);
+				al_draw_pixel(x, y, al_map_rgb(c.r, c.g, c.b));
+
+
+				t += tStep;
+			}
+		}
+		// bottom tri
+			
+		dy1 = y3 - y2;
+		dx1 = x3 - x2;
+		dv1 = v3 - v2;
+		du1 = u3 - u2;
+
+		if (dy1) daxStep = dx1 / (float)abs(dy1);
+		if(dy2) dbxStep = dx2 / (float)abs(dy2);
+
+		du1Step = 0.0f;
+		dv1Step = 0.0f;
+
+		if (dy1) du1Step = du1 / (float)abs(dy1);
+		if (dy2) dv1Step = dv1 / (float)abs(dy2);
+
+
+
+		for (int y = y2; y <= y3; y++)
+		{
+			int ax = x2 + (float)(y - y2) * daxStep;
+			int bx = x1 + (float)(y - y1) * dbxStep;
+
+			float texSu = u2 + (float)(y - y2) * du1Step; //starting values
+			float texSv = v2 + (float)(y - y2) * dv1Step;
+
+			float texEu = u1 + (float)(y - y1) * du2Step;
+			float texEv = v1 + (float)(y - y1) * du2Step;//ending values
+
+			if (ax > bx)
+			{
+				std::swap(ax, bx);
+				std::swap(texSu, texEu);
+				std::swap(texSv, texEv);
+			}
+
+			texU = texSu;
+			texV = texSv;
+
+			float tStep = 1.0f / ((float)(bx - ax));
+			float t = 0.0f; // where
+
+			for (int x = ax; x < bx; x++)
+			{
+				texU = (1.0f - t) * texSu + t * texEu;
+				texV = (1.0f - t) * texSu + t * texEv;
+
+
+
+				//draw
+
+			//	auto c = sampleTexture(Vector2(texU, texEv), texture);
+				//al_draw_pixel(x, y, al_map_rgb(c.r, c.g, c.b));
+				al_draw_pixel(x, y, al_map_rgb(255, 255, 255));
+
+				t += tStep;
+			}
+		}
+	}
+}	
+
+
+void degToRad(vector3& v)
+{
+	v = vector3(degToRad(v.x), degToRad(v.y), radToDeg(v.z));
 }

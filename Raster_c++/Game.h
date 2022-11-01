@@ -3,11 +3,12 @@
 #include "windowManager.h"
 #include"allegro5/allegro5.h"
 #include <iostream>
+#define PI 3.1415926535897
 class Game
 {
 public:
 	void Start();
-	int Update();
+	int Update(float deltaTime);
 
 };
 struct Input
@@ -71,52 +72,107 @@ struct Input
 			y--;
 	}
 };
-struct Vector3
+struct vector3
 {
 public:
 	float x;
 	float y;
 	float z;
-	Vector3(float X = 0, float Y = 0, float Z = 0)
+	vector3(float X = 0, float Y = 0, float Z = 0)
 	{
 		x = X;
 		y = Y;
 		z = Z;
 	}
 
-	friend Vector3 operator+(const Vector3& v1, const Vector3& v2)
+	friend vector3 operator+(const vector3& v1, const vector3& v2)
 	{
 		float x = v1.x + v2.x;
 		float y = v1.y + v2.y;
 		float z = v1.z + v2.z;
-		return Vector3(x, y, z);
+		return vector3(x, y, z);
 	}
-	friend Vector3 operator-(const Vector3& v1, const Vector3& v2)
+	friend vector3 operator-(const vector3& v1, const vector3& v2)
 	{
 		float x = v1.x - v2.x;
 		float y = v1.y - v2.y;
 		float z = v1.z - v2.z;
-		return Vector3(x, y, z);
+		return vector3(x, y, z);
 	}
-	friend Vector3 operator*(const Vector3& v1, const Vector3& v2)
+	friend vector3 operator*(const vector3& v1, const vector3& v2)
 	{
 		float x = v1.x * v2.x;
 		float y = v1.y * v2.y;
 		float z = v1.z * v2.z;
-		return Vector3(x, y, z);
+		return vector3(x, y, z);
 	}
-	friend Vector3 operator*(const Vector3& v1, const float v2)
+	friend vector3 operator*(const vector3& v1, const float v2)
 	{
 		float x = v1.x * v2;
 		float y = v1.y * v2;
 		float z = v1.z * v2;
-		return Vector3(x, y, z);
+		return vector3(x, y, z);
 	}
-	friend Vector3 operator/(const Vector3& v1, const float v2)
+	friend vector3 operator/(const vector3& v1, const float v2)
 	{
 		float x = v1.x / v2;
 		float y = v1.y / v2;
 		float z = v1.z / v2;
-		return Vector3(x, y, z);
+		return vector3(x, y, z);
 	}
 };
+struct vector2
+{
+public:
+	float x;
+	float y;
+	vector2(float X = 0, float Y = 0)
+	{
+		x = X;
+		y = Y;
+	}
+	vector2(vector3 v)
+	{
+		x = v.x;
+		y = v.y;
+	}
+};
+float degToRad(float deg)
+{
+	return(deg * (PI / 180));
+}
+vector3 rayFromAngle(vector2 A)
+{
+	vector3 pos
+	(
+		sinf(degToRad(A.y)) * cosf(degToRad(A.x)),
+		cosf(degToRad(A.x)),
+		cosf(degToRad(A.y)) * cosf(degToRad(A.x))
+	);
+
+	return pos;
+}
+vector3 camForward(vector3 v)
+{
+	//convert to radians
+
+	v.x = degToRad(v.x);
+	v.y = degToRad(v.y);
+	v.z = degToRad(v.z);
+
+	auto pos = rayFromAngle(v);
+	return pos;
+}
+vector3 camRight(vector3 v)
+{
+	//convert to radians
+	v.y = v.y + 90.0f;
+
+	v.x = degToRad(v.x);
+	v.y = degToRad(v.y);
+	v.z = degToRad(v.z);
+
+	auto pos = rayFromAngle(v);
+	return pos;
+}
+

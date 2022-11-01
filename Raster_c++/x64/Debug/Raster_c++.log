@@ -1,5 +1,10 @@
-﻿  renderer.cpp
-C:\Users\ocjla\source\repos\Raster_cpp\Raster_c++\3dMethods.h(133,13): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-C:\Users\ocjla\source\repos\Raster_cpp\Raster_c++\3dMethods.h(137,13): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-C:\Users\ocjla\source\repos\Raster_cpp\Raster_c++\3dMethods.h(294,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  Raster_c++.vcxproj -> C:\Users\ocjla\source\repos\Raster_cpp\x64\Debug\Raster_c++.exe
+﻿  Game.cpp
+  winEntry.cpp
+  Generating Code...
+renderer.obj : error LNK2005: "float __cdecl degToRad(float)" (?degToRad@@YAMM@Z) already defined in Game.obj
+renderer.obj : error LNK2005: "struct vector3 __cdecl rayFromAngle(struct vector2)" (?rayFromAngle@@YA?AUvector3@@Uvector2@@@Z) already defined in Game.obj
+winEntry.obj : error LNK2005: "struct vector3 __cdecl camForward(struct vector3)" (?camForward@@YA?AUvector3@@U1@@Z) already defined in Game.obj
+winEntry.obj : error LNK2005: "struct vector3 __cdecl camRight(struct vector3)" (?camRight@@YA?AUvector3@@U1@@Z) already defined in Game.obj
+winEntry.obj : error LNK2005: "float __cdecl degToRad(float)" (?degToRad@@YAMM@Z) already defined in Game.obj
+winEntry.obj : error LNK2005: "struct vector3 __cdecl rayFromAngle(struct vector2)" (?rayFromAngle@@YA?AUvector3@@Uvector2@@@Z) already defined in Game.obj
+C:\Users\ocjla\source\repos\Raster_cpp\x64\Debug\Raster_c++.exe : fatal error LNK1169: one or more multiply defined symbols found

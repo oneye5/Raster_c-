@@ -13,6 +13,7 @@ void WindowManager::initWindow()
 {
 	al_init();
 	al_init_primitives_addon();
+	al_init_image_addon();
 	Queue = al_create_event_queue();
 	
 	//al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
@@ -48,6 +49,7 @@ int WindowManager::windowTick()
 	al_uninstall_keyboard();
 	al_ungrab_mouse();
 	al_uninstall_mouse();
+	al_shutdown_image_addon();
 	return -1;
 }
 

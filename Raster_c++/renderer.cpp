@@ -1,9 +1,9 @@
 #include<iostream>
 #include"renderer.h"
 #include"3dMethods.h"
-#include "allegro5/allegro_primitives.h"
-#include "allegro5/allegro.h"
 #include <algorithm>
+
+
 using std::string;
 
 int screenWidth;
@@ -18,8 +18,8 @@ float aspectRatio;
 Matrix4x4 projMatrix;
  vector<Mesh>geometry;
  directionLight dirLight;
- Vector3 camPos;
- Vector3 camRot = Vector3(0.0f, 0.0f, 1.0f);
+ vector3 camPos;
+ vector3 camRot = vector3(0.0f, 0.0f, 1.0f);
 
 void ViewPort::InitViewPort(int ScreenWidth, int ScreenHeight)
 {
@@ -29,16 +29,16 @@ void ViewPort::InitViewPort(int ScreenWidth, int ScreenHeight)
 
 	projMatrix = getProjectionMat(fov, aspectRatio, farPlane, nearPlane);
 }
-string tempDirectoryToMesh = "monke.obj";
+string tempDirectoryToMesh = "room1.obj";
 void ViewPort::InitGeometry()
 {
 	geometry = vector<Mesh>{Mesh()};
 	geometry[0].loadFromObj(tempDirectoryToMesh);
-	geometry[0].pos = Vector3(0.0f, 0.0f, 5.0f);
+	geometry[0].pos = vector3(0.0f, 0.0f, 5.0f);
 
 	dirLight = directionLight();
 	dirLight.lumens = 90;
-	dirLight.dir = Vector3(0.0f, 0.0f, -0.5f);
+	dirLight.dir = vector3(-3.0f, 0.0f, -0.5f);
 }
 
 void ViewPort::render()
@@ -58,10 +58,10 @@ void ViewPort::render()
 			transform = matrixRotZ * matrixRotX;
 			transform = transform * offset;
 
-			Vector3 camUp = Vector3(0.0f, 1.0f, 0.0f);
-			Vector3 camTarget = Vector3(0,0,1);
+			vector3 camUp = vector3(0.0f, 1.0f, 0.0f);
+			vector3 camTarget = vector3(0,0,1);
 			Matrix4x4 camMatRot = getRotMatY(camRot.y);
-			Vector3 lookDir = multiplyMatrixVector(camMatRot, camTarget);
+			vector3 lookDir = multiplyMatrixVector(camMatRot, camTarget);
 			camTarget = camPos + lookDir;
 			Matrix4x4 camMat = matPointAt(camPos, camTarget, camUp);
 			
@@ -79,40 +79,62 @@ void ViewPort::render()
 			//============================================= calc normals =======================================
 
 
-			Vector3 norm, l1, l2;
-			l1 = Vector3( translated.verticies[1]) - Vector3 (translated.verticies[0]);
-			l2 = Vector3( translated.verticies[2]) - Vector3( translated.verticies[0]);
+			vector3 norm, l1, l2;
+			l1 = vector3( translated.verticies[1]) - vector3 (translated.verticies[0]);
+			l2 = vector3( translated.verticies[2]) - vector3( translated.verticies[0]);
 			norm = crossProduct(l1, l2);
-			toNormalized(norm);
-			float dotProd = toDotProduct(norm,Vector3( translated.verticies[0]), camPos);
+			G_toNormalized(norm);
+			float dotProd = toDotProduct(norm,vector3( translated.verticies[0]), camPos);
 			//exclude obscured
 			
 			if ( dotProd < 0.0f)
 			{
 				//============================================== Lighting ===========================================
-				Vector3 direction = dirLight.dir;
-				toNormalized(direction);
+				vector3 direction = dirLight.dir;
+				G_toNormalized(direction);
 
 				float dotPod = toDotProduct(norm, direction);
 
 				float brightness = dotPod * dirLight.lumens;
 				brightness = clamp(brightness, 0, 255, true);
-				projected.colInfo.col = Color(brightness, brightness , brightness);
-				//============================================== wolrd to view space ===========================
+				triColInfo colinfo = triColInfo();
+				colinfo.col = Color(brightness, brightness , brightness);
+				//============================================== wolrd to view space && Clipping ===========================
 				viewed.verticies[0] = multiplyMatrixVector(viewMat, projected.verticies[0]);
 				viewed.verticies[1] = multiplyMatrixVector(viewMat, projected.verticies[1]);
 				viewed.verticies[2] = multiplyMatrixVector(viewMat, projected.verticies[2]);
+					
+				projected.colInfo = viewed.colInfo;
+				projected.textureCoords = viewed.textureCoords;
+
+				int clippedCount = 0;
+				vector<Triangle> clippedTris = vector<Triangle>{Triangle(),Triangle()};
+				
+
+				clippedCount = TriClipFromPlane(vector3(0.0f, 0.0f,nearPlane), vector3(0.0f, 0.0f, 1.0f), viewed, clippedTris[0], clippedTris[1]);
+
+				clippedTris[0].colInfo = projected.colInfo;
+				clippedTris[1].colInfo = projected.colInfo;
+
 				//============================================== project  =================================== 
+				for(int i = 0; i < clippedCount; i++)
+				{
+					projected.verticies[0] = multiplyMatrixVector(projMatrix, clippedTris[i].verticies[0]);
+					projected.verticies[1] = multiplyMatrixVector(projMatrix, clippedTris[i].verticies[1]);
+					projected.verticies[2] = multiplyMatrixVector(projMatrix, clippedTris[i].verticies[2]);
 
-				projected.verticies[0]=  multiplyMatrixVector(projMatrix, viewed.verticies[0]);
-				projected.verticies[1] = multiplyMatrixVector(projMatrix, viewed.verticies[1]);
-				projected.verticies[2] = multiplyMatrixVector(projMatrix, viewed.verticies[2]);
+					projected.verticies[0] = projected.verticies[0] / projected.verticies[0].w;
+					projected.verticies[1] = projected.verticies[1] / projected.verticies[1].w;
+					projected.verticies[2] = projected.verticies[2] / projected.verticies[2].w;
 
-				projected.verticies[0] = projected.verticies[0] / projected.verticies[0].w;
-				projected.verticies[1] = projected.verticies[1] / projected.verticies[1].w;
-				projected.verticies[2] = projected.verticies[2] / projected.verticies[2].w;
+					projected.textureCoords[0] = clippedTris[i].textureCoords[0];
+					projected.textureCoords[1] = clippedTris[i].textureCoords[1];
+					projected.textureCoords[2] = clippedTris[i].textureCoords[2];
 
-				toRender.push_back(projected);
+					//apply lighting
+					projected.colInfo = colinfo;
+					toRender.push_back(projected);
+				}
 			}
 		}
 	}
@@ -128,6 +150,16 @@ void ViewPort::render()
 	for (auto& Projected : toRender)
 	{
 		normToScreen(screenWidth, screenHeight, Projected);
+		/*
+		textureTri(
+			Projected.verticies[0].x, Projected.verticies[0].y,Projected.textureCoords[0].x,Projected.textureCoords[0].y,
+			Projected.verticies[1].x, Projected.verticies[1].y, Projected.textureCoords[1].x, Projected.textureCoords[1].y,
+			Projected.verticies[2].x, Projected.verticies[2].y, Projected.textureCoords[2].x, Projected.textureCoords[2].y,
+			tempTexture
+		);
+		*/
+		
+		
 		al_draw_filled_triangle(
 			Projected.verticies[0].x,
 			Projected.verticies[0].y,
@@ -140,6 +172,27 @@ void ViewPort::render()
 
 			al_map_rgb(Projected.colInfo.col.r, Projected.colInfo.col.g, Projected.colInfo.col.b)
 		);
+		
+
+		
+		bool wireframe = false; // ================================================================== WIREFRAME MODE ==================================
+		
+		if (wireframe)
+		{
+			al_draw_triangle(
+				Projected.verticies[0].x,
+				Projected.verticies[0].y,
+
+				Projected.verticies[1].x,
+				Projected.verticies[1].y,
+
+				Projected.verticies[2].x,
+				Projected.verticies[2].y,
+
+				al_map_rgb(255, 255, 255),
+				1.0f
+			);
+		}
 	}
 }
 
@@ -147,35 +200,41 @@ void ViewPort::render()
 void ViewPort::translate(int index, float x, float y, float z)
 {
 	auto& g = geometry[0];
-	g.pos = Vector3(g.pos.x + x, g.pos.y + y, g.pos.z + z);
+	g.pos = vector3(g.pos.x + x, g.pos.y + y, g.pos.z + z);
 }
 
 void ViewPort::setPosition(int index, float x, float y, float z)
 {
 	auto& g = geometry[0];
-	g.pos = Vector3(x, y, z);
+	g.pos = vector3(x, y, z);
 }
 
 void ViewPort::rotate(int index, float x, float y, float z)
 {
 	auto& g = geometry[0];
-	g.rot = Vector3(g.rot.x + x, g.rot.y + y, g.rot.z + z);
+	auto v = vector3(g.rot.x + x, g.rot.y + y, g.rot.z + z);
+	degToRad(v);
+	g.rot = v;
 }
 
 void ViewPort::setRotation(int index, float x, float y, float z)
 {
 	auto& g = geometry[0];
-	g.rot = Vector3(x, y, z);
+	auto v = vector3(x, y, z);
+		degToRad(v); 
+	g.rot =v;
 }
 
 void ViewPort::camSetPos(float x, float y, float z)
 {
-	camPos = Vector3(x, y, z);
+	camPos = vector3(x, y, z);
 }
 
 void ViewPort::camSetRot(float x, float y, float z)
 {
-	camRot = Vector3(x, y, z);
+	auto v =vector3(x, y, z);
+	degToRad(v);
+	camRot = v;
 }
 
 #pragma endregion

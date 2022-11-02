@@ -1,5 +1,5 @@
 #include "Game.h"
-
+#include "3dGameMethods.h"
 #include"renderer.h"
 #include<windows.system.threading.h>
 
@@ -27,24 +27,17 @@ void playerControls()
 {
 	input.tick(windowManager.getDisplay());	
 	gameCamRot = gameCamRot + vector3(input.my, -input.mx, 0.0f);
+	clipRot(gameCamRot);
 
-
-
-	vector3 zchange,xchange,ychange;
-	vector3 rawInput = vector3(input.x, input.y, input.z);
-
-	zchange = camForward(vector3(0.0f, gameCamRot.y, 0.0f)) * moveMulti;
-	zchange = zchange * input.z;
-
-	ychange = input.y * moveMulti;
-
-	zchange = camRight(vector3(0.0f, gameCamRot.y, 0.0f)) * moveMulti;
-	zchange = xchange * input.x;
-
-	vector3 change = zchange + xchange + ychange;
-	gameCamPos = gameCamPos + change;
+	vector3 forward = camForward(gameCamRot);
+	vector3 right = camRight(gameCamRot);
 
 	
+	vector3 x = right * input.x ;
+	vector3 y = vector3(0.0f, input.y, 0.0f);
+	vector3 z = forward * input.z;
+
+	gameCamPos = gameCamPos +z - x - y;
 }
 
 void Game::Start()

@@ -1,10 +1,2 @@
 ﻿  Game.cpp
-  winEntry.cpp
-  Generating Code...
-renderer.obj : error LNK2005: "float __cdecl degToRad(float)" (?degToRad@@YAMM@Z) already defined in Game.obj
-renderer.obj : error LNK2005: "struct vector3 __cdecl rayFromAngle(struct vector2)" (?rayFromAngle@@YA?AUvector3@@Uvector2@@@Z) already defined in Game.obj
-winEntry.obj : error LNK2005: "struct vector3 __cdecl camForward(struct vector3)" (?camForward@@YA?AUvector3@@U1@@Z) already defined in Game.obj
-winEntry.obj : error LNK2005: "struct vector3 __cdecl camRight(struct vector3)" (?camRight@@YA?AUvector3@@U1@@Z) already defined in Game.obj
-winEntry.obj : error LNK2005: "float __cdecl degToRad(float)" (?degToRad@@YAMM@Z) already defined in Game.obj
-winEntry.obj : error LNK2005: "struct vector3 __cdecl rayFromAngle(struct vector2)" (?rayFromAngle@@YA?AUvector3@@Uvector2@@@Z) already defined in Game.obj
-C:\Users\ocjla\source\repos\Raster_cpp\x64\Debug\Raster_c++.exe : fatal error LNK1169: one or more multiply defined symbols found
+  Raster_c++.vcxproj -> C:\Users\ocjla\source\repos\Raster_c++\x64\Debug\Raster_c++.exe

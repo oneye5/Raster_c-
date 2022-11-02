@@ -9,6 +9,7 @@
 #include "allegro5/allegro.h"
 #include "allegro5/bitmap.h"
 #include"allegro5/allegro_image.h"
+#pragma warning(disable : 4996)
 using std::vector;
 
 
@@ -407,12 +408,14 @@ struct directionLight
 
 	vector3 dir;
 	float lumens;
+	float ambientMulti;
 	Color color;
 	directionLight() 
 	{
 		dir = vector3(0, 0, 0);
 		lumens = 0.0f;
 		color = Color(255, 255, 255);
+		ambientMulti = 0.0f;
 	};
 };
 float clamp(float in, float min, float max, bool Round)

@@ -1,0 +1,9 @@
+namespace Rasterc
+{
+    [default_interface]
+    runtimeclass gameMethods : Windows.UI.Xaml.Controls.Page
+    {
+        gameMethods();
+        Int32 MyProperty;
+    }
+}

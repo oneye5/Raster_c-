@@ -37,8 +37,9 @@ void ViewPort::InitGeometry()
 	geometry[0].pos = vector3(0.0f, 0.0f, 5.0f);
 
 	dirLight = directionLight();
-	dirLight.lumens = 90;
-	dirLight.dir = vector3(-3.0f, 0.0f, -0.5f);
+	dirLight.lumens = 50;
+	dirLight.ambientMulti = 1.0f;
+	dirLight.dir = vector3(-3.0f, 1.0f, -0.5f);
 }
 
 void ViewPort::render()
@@ -60,9 +61,17 @@ void ViewPort::render()
 
 			vector3 camUp = vector3(0.0f, 1.0f, 0.0f);
 			vector3 camTarget = vector3(0,0,1);
-			Matrix4x4 camMatRot = getRotMatY(camRot.y);
-			vector3 lookDir = multiplyMatrixVector(camMatRot, camTarget);
+			Matrix4x4 camMatRotY = getRotMatY(camRot.y);
+			Matrix4x4 camMatRotX = getRotMatZ(camRot.x);
+
+			
+
+			vector3 lookDir = multiplyMatrixVector(camMatRotY, camTarget);
+			lookDir = multiplyMatrixVector(camMatRotX, lookDir);
+			
 			camTarget = camPos + lookDir;
+			
+
 			Matrix4x4 camMat = matPointAt(camPos, camTarget, camUp);
 			
 			Matrix4x4 viewMat = matInverse(camMat);
@@ -89,13 +98,15 @@ void ViewPort::render()
 			
 			if ( dotProd < 0.0f)
 			{
-				//============================================== Lighting ===========================================
+				//============================================== Lighting ==============================================================================================
 				vector3 direction = dirLight.dir;
 				G_toNormalized(direction);
 
 				float dotPod = toDotProduct(norm, direction);
 
 				float brightness = dotPod * dirLight.lumens;
+				brightness += dirLight.ambientMulti * dirLight.lumens;
+
 				brightness = clamp(brightness, 0, 255, true);
 				triColInfo colinfo = triColInfo();
 				colinfo.col = Color(brightness, brightness , brightness);

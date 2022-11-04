@@ -1,2 +1,3 @@
-﻿  Game.cpp
-  Raster_c++.vcxproj -> C:\Users\ocjla\source\repos\Raster_c++\x64\Debug\Raster_c++.exe
+﻿  renderer.cpp
+C:\Users\ocjla\source\repos\Raster_cpp\Raster_c++\3dMethods.h(676): warning C4715: 'TriClipFromPlane': not all control paths return a value
+  Raster_c++.vcxproj -> C:\Users\ocjla\source\repos\Raster_cpp\x64\Debug\Raster_c++.exe

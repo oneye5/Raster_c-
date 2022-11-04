@@ -220,8 +220,8 @@ struct Mesh
 		vector<Vector4> verticies;
 		while (!f.eof())
 		{
-			char line[1000];
-			f.getline(line, 1000);
+			char line[10000];
+			f.getline(line, 10000);
 			std::strstream str;
 			str << line;
 			char temp;
@@ -245,6 +245,8 @@ struct Mesh
 				);
 			
 			}
+
+			std::cout << "loading line "<<verticies.size()<< "\n";
 		}
 		return true;
 	}
@@ -366,7 +368,7 @@ void normToScreen(int w, int h,Triangle& t)
 		normToScreen(w, h, v.x, v.y);
 	}
 }
-void G_toNormalized(vector3& v)
+void toNormalized(vector3& v)
 {
 	float magnitude = sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
 	if(magnitude != 0)
@@ -403,6 +405,7 @@ vector3 crossProduct(vector3 v1, vector3 v2)
 	v.z = v1.x * v2.y - v1.y * v2.x;
 	return v;
 }
+
 struct directionLight
 {
 
@@ -418,6 +421,14 @@ struct directionLight
 		ambientMulti = 0.0f;
 	};
 };
+struct pointLight
+{
+	float lumens;
+	float range;
+	Color color;
+	vector3 pos;
+};
+
 float clamp(float in, float min, float max, bool Round)
 {
 	if (in < min)
@@ -446,13 +457,13 @@ float magnitude(vector3 v)
 Matrix4x4 matPointAt(vector3 pos, vector3 target, vector3 up)
 {
 	vector3 newForward = target - pos;
-	G_toNormalized(newForward);
+	toNormalized(newForward);
 
 	// new up 
 
 	vector3 v = newForward * toDotProduct(up, newForward);
 	vector3 newUp = up - v;
-	G_toNormalized(newUp);
+	toNormalized(newUp);
 
 	//right
 	vector3 newRight = crossProduct(newUp, newForward);
@@ -480,15 +491,15 @@ vector3 rayFromAngle(vector2 A)
 {
 	vector3 pos
 	(
-		sinf(degToRad(A.y)) * cosf(degToRad(A.x)),
-		cosf(degToRad(A.x)),
-		cosf(degToRad(A.y)) * cosf(degToRad(A.x))
+		sinf(A.y) * cosf(A.x),
+		cosf(A.x),
+		cosf(A.y) * cosf(A.x)
 	);
 	return pos;
 }
 vector3 intersectPlane(vector3& plane_p, vector3& plane_n, vector3& lineStart, vector3& lineEnd,float& t)
 {
-	G_toNormalized(plane_n);
+	toNormalized(plane_n);
 	float plane_d = -toDotProduct(plane_n, plane_p);
 	float ad = toDotProduct(lineStart, plane_n);
 	float bd = toDotProduct(lineEnd, plane_n);
@@ -501,7 +512,7 @@ vector3 intersectPlane(vector3& plane_p, vector3& plane_n, Vector4& lineStart4, 
 {
 	auto lineStart = vector3(lineStart4);
 	auto lineEnd = vector3(lineEnd4);
-	G_toNormalized(plane_n);
+	toNormalized(plane_n);
 	float plane_d = -toDotProduct(plane_n, plane_p);
 	float ad = toDotProduct(lineStart, plane_n);
 	float bd = toDotProduct(lineEnd, plane_n);
@@ -513,13 +524,13 @@ vector3 intersectPlane(vector3& plane_p, vector3& plane_n, Vector4& lineStart4, 
 float dist(Vector4& p, vector3 plane_n,vector3 plane_p)
 {
 	vector3 n = vector3(p);
-	G_toNormalized(n);
+	toNormalized(n);
 	return (plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - toDotProduct(plane_n, plane_p));
 }
 int TriClipFromPlane(vector3 plane_p, vector3 plane_n, Triangle& in_tri, Triangle& out_tri1, Triangle& out_tri2)
 {
 	// Make sure plane normal is indeed normal
-	G_toNormalized(plane_n);
+	toNormalized(plane_n);
 
 	// Create two temporary storage arrays to classify points either side of plane
 	// If distance sign is positive, point lies on "inside" of plane
@@ -837,4 +848,10 @@ void textureTri(
 void degToRad(vector3& v)
 {
 	v = vector3(degToRad(v.x), degToRad(v.y), radToDeg(v.z));
+}
+
+float getDistance(vector3 v1, vector3 v2)
+{
+	auto out =	v1 - v2;
+	return	magnitude(out);
 }

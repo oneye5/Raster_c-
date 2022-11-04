@@ -113,6 +113,4 @@ void clipRot(vector3& v)
 		v.z =v.z - 360.0f;
 	if (v.z < -180.0f)
 		v.z = v.z + 360.0f;
-
-	std::cout << v.x << " " << v.y << "\n";
 }

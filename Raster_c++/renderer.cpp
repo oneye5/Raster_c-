@@ -11,13 +11,15 @@ int screenHeight;
 
 const float nearPlane = 0.1f;
 const float farPlane = 1000.0f;
-const float fov = 90.0f;
+const float fov =60.0f;
 float aspectRatio;
 
 
 Matrix4x4 projMatrix;
  vector<Mesh>geometry;
  directionLight dirLight;
+ vector<pointLight> pointLights;
+
  vector3 camPos;
  vector3 camRot = vector3(0.0f, 0.0f, 1.0f);
 
@@ -29,7 +31,7 @@ void ViewPort::InitViewPort(int ScreenWidth, int ScreenHeight)
 
 	projMatrix = getProjectionMat(fov, aspectRatio, farPlane, nearPlane);
 }
-string tempDirectoryToMesh = "room1.obj";
+string tempDirectoryToMesh = "house.obj";
 void ViewPort::InitGeometry()
 {
 	geometry = vector<Mesh>{Mesh()};
@@ -37,9 +39,15 @@ void ViewPort::InitGeometry()
 	geometry[0].pos = vector3(0.0f, 0.0f, 5.0f);
 
 	dirLight = directionLight();
-	dirLight.lumens = 50;
+	dirLight.lumens = 20.0f;
 	dirLight.ambientMulti = 1.0f;
 	dirLight.dir = vector3(-3.0f, 1.0f, -0.5f);
+
+	pointLights.push_back(pointLight());
+	pointLights[0].color = Color(255, 255, 255);
+	pointLights[0].lumens = 50.0f;
+	pointLights[0].range = 15.0f;
+	pointLights[0].pos = vector3(1.0f, 2.5f, 4.0f);
 }
 
 void ViewPort::render()
@@ -62,13 +70,19 @@ void ViewPort::render()
 			vector3 camUp = vector3(0.0f, 1.0f, 0.0f);
 			vector3 camTarget = vector3(0,0,1);
 			Matrix4x4 camMatRotY = getRotMatY(camRot.y);
-			Matrix4x4 camMatRotX = getRotMatZ(camRot.x);
+			Matrix4x4 camMatRotX = getRotMatZ((-camRot.x + degToRad(90.0f)) );
 
 			
 
-			vector3 lookDir = multiplyMatrixVector(camMatRotY, camTarget);
-			lookDir = multiplyMatrixVector(camMatRotX, lookDir);
-			
+			auto lookDir =  multiplyMatrixVector(camMatRotX, camUp);
+			lookDir.y = lookDir.y;
+			lookDir.x = 0.0f;
+			lookDir.z = 0.0f;
+			lookDir = lookDir + multiplyMatrixVector(camMatRotY,camTarget);
+			lookDir.x = lookDir.x / (1.0f + abs(lookDir.y));
+			lookDir.z = lookDir.z / (1.0f + abs(lookDir.y));
+
+
 			camTarget = camPos + lookDir;
 			
 
@@ -92,40 +106,58 @@ void ViewPort::render()
 			l1 = vector3( translated.verticies[1]) - vector3 (translated.verticies[0]);
 			l2 = vector3( translated.verticies[2]) - vector3( translated.verticies[0]);
 			norm = crossProduct(l1, l2);
-			G_toNormalized(norm);
+			toNormalized(norm);
 			float dotProd = toDotProduct(norm,vector3( translated.verticies[0]), camPos);
 			//exclude obscured
 			
 			if ( dotProd < 0.0f)
 			{
 				//============================================== Lighting ==============================================================================================
+				//dir light
+
 				vector3 direction = dirLight.dir;
-				G_toNormalized(direction);
+				toNormalized(direction);
 
 				float dotPod = toDotProduct(norm, direction);
 
 				float brightness = dotPod * dirLight.lumens;
 				brightness += dirLight.ambientMulti * dirLight.lumens;
-
-				brightness = clamp(brightness, 0, 255, true);
 				triColInfo colinfo = triColInfo();
-				colinfo.col = Color(brightness, brightness , brightness);
+				
+
+				vector3 planeCenter;
+				planeCenter = averagePos(projected);
+				//point lights
+				float brightness2 = 0.0f;
+				for (auto x : pointLights)
+				{
+					//add check for LOS to plane
+					// add check for dot product
+					vector3 angle = planeCenter - x.pos;
+					toNormalized(angle);
+					dotProd = -toDotProduct(angle, norm);
+
+					brightness2 += ((( x.range + 1.0f / getDistance(x.pos,planeCenter) )/ getDistance(x.pos,planeCenter))
+						* x.lumens) * dotProd;
+				//	std::cout << brightness2 << "\n";
+
+				
+				}	
+				clamp(brightness2, 0, 255, false);
+
+				float overallBrightness = brightness + brightness2;
+				overallBrightness = clamp(overallBrightness, 0, 255, true);
+				colinfo.col = Color(overallBrightness, overallBrightness, overallBrightness);
 				//============================================== wolrd to view space && Clipping ===========================
 				viewed.verticies[0] = multiplyMatrixVector(viewMat, projected.verticies[0]);
 				viewed.verticies[1] = multiplyMatrixVector(viewMat, projected.verticies[1]);
 				viewed.verticies[2] = multiplyMatrixVector(viewMat, projected.verticies[2]);
-					
-				projected.colInfo = viewed.colInfo;
-				projected.textureCoords = viewed.textureCoords;
 
 				int clippedCount = 0;
 				vector<Triangle> clippedTris = vector<Triangle>{Triangle(),Triangle()};
-				
+			
 
 				clippedCount = TriClipFromPlane(vector3(0.0f, 0.0f,nearPlane), vector3(0.0f, 0.0f, 1.0f), viewed, clippedTris[0], clippedTris[1]);
-
-				clippedTris[0].colInfo = projected.colInfo;
-				clippedTris[1].colInfo = projected.colInfo;
 
 				//============================================== project  =================================== 
 				for(int i = 0; i < clippedCount; i++)

@@ -1,0 +1,6 @@
+﻿renderer.obj : error LNK2001: unresolved external symbol __imp__al_draw_triangle
+renderer.obj : error LNK2001: unresolved external symbol __imp__al_draw_filled_triangle
+windowManager.obj : error LNK2001: unresolved external symbol __imp__al_init_image_addon
+windowManager.obj : error LNK2001: unresolved external symbol __imp__al_shutdown_image_addon
+windowManager.obj : error LNK2001: unresolved external symbol __imp__al_init_primitives_addon
+C:\Users\ocjla\source\repos\Raster_c++\Release\Raster_c++.exe : fatal error LNK1120: 5 unresolved externals

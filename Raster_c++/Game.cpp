@@ -4,7 +4,7 @@
 #include<windows.system.threading.h>
 
 ViewPort vp = ViewPort();
-vector3 gameCamPos = vector3(0.0f,0.0f,0.0f);
+vector3 gameCamPos = vector3(0.0f,-4.0f,10.0f);
 vector3 gameCamRot = vector3(0.0f,0.0f,1.0f);
 Input input = Input();
 vector3 moveMulti = vector3(0.1f, 0.1f, 0.1f);
@@ -18,8 +18,12 @@ int renderPass()
 	al_clear_to_color(al_map_rgb(0, 0,50));
 	vp.render();
 	int returnCode = windowManager.windowTick();
+
+
 	
-	
+
+	if (returnCode != -1 && input.escape)
+		returnCode = -1;
 	return returnCode;
 
 }
@@ -45,6 +49,11 @@ void Game::Start()
 	windowManager.initWindow();
 	vp.InitViewPort(windowManager.getSetWindow()[0], windowManager.getSetWindow()[1]);
 	vp.InitGeometry();
+
+	al_hide_mouse_cursor(windowManager.getDisplay());
+	al_set_window_title(windowManager.getDisplay(), "press esc to exit");
+
+	
 }
 
 int Game::Update(float deltaTime) 
@@ -53,10 +62,10 @@ int Game::Update(float deltaTime)
 	playerControls();
 	
 	
-	vp.setRotation(0, 180.0f, 0.0f, 0.0f);
 
-
+	vp.setRotation(1,gameCamRot.x * 4.0f,gameCamRot.y * 4.0f,gameCamRot.z * 4.0f);
+	vp.setLightPos(4, gameCamPos.x, gameCamPos.y, gameCamPos.z);
 	
-	//std::cout << fps << "\n";
+	//std::cout << gameCamPos.x << " " << gameCamPos.y << " " << gameCamPos.z << "\n";
 	return renderPass(); //returns -1 on quit
 }

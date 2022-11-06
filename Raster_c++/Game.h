@@ -14,7 +14,7 @@ struct Input
 	float my = 0.0f;
 	bool mDown = false;
 
-	
+	bool escape = false;
 
 	int mousePosX = 0;
 	int mousePosY = 0;
@@ -26,6 +26,8 @@ struct Input
 
 		int* tx = &newMousePosX;
 		int* ty = &newMousePosY;
+
+		
 		al_get_mouse_cursor_position(tx, ty);
 		
 		mx = newMousePosX - mousePosX;
@@ -63,6 +65,10 @@ struct Input
 			y++;
 		if (GetKeyState(VK_CONTROL) < 0)
 			y--;
+
+
+		if (GetKeyState(VK_ESCAPE) < 0)
+			escape = true;
 	}
 };
 class Game

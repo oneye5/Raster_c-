@@ -1,8 +1,8 @@
 #include "windowManager.h"
 #include <iostream>
 
-int WindowWidth = 1600;
-int WindowHeight = 900;
+int WindowWidth = 1920;
+int WindowHeight = 1080;
 
 bool running = true;
 ALLEGRO_DISPLAY* Display;
@@ -16,7 +16,7 @@ void WindowManager::initWindow()
 	al_init_image_addon();
 	Queue = al_create_event_queue();
 	
-	//al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+	al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
 	Display = al_create_display(WindowWidth, WindowHeight);
 	al_install_keyboard();
 	al_install_mouse();

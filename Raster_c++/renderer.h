@@ -16,5 +16,6 @@ public:
 
 	void camSetPos(float x, float y, float z);
 	void camSetRot(float x, float y, float z);
+	void setLightPos(int index,float x, float y, float z);
 
 };

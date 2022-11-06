@@ -162,6 +162,12 @@ struct Color
 		g = G;
 		b = B;
 	}
+	Color(float R, float G, float B)
+	{
+		r = (int)R;
+		g = (int)G;
+		b = (int)B;
+	}
 	Color() { 
 		r = 255;
 		g = 255;
@@ -417,7 +423,7 @@ struct directionLight
 	{
 		dir = vector3(0, 0, 0);
 		lumens = 0.0f;
-		color = Color(255, 255, 255);
+		color = Color((unsigned char)255, (unsigned char)255, (unsigned char)255);
 		ambientMulti = 0.0f;
 	};
 };
@@ -685,7 +691,7 @@ Color sampleTexture(vector2 v, ALLEGRO_BITMAP* t)
 
 	return	al_get_pixel(t, x, y);
 }
-void textureTri(
+void textureTri(			//textureing not implimented due to per pixel rendering being too slow, this is likley because of the heavy cpu bias in this program
 	int x1, int y1, float u1, float v1,
 	int x2, int y2, float u2, float v2,
 	int x3, int y3, float u3, float v3,ALLEGRO_BITMAP* texture)

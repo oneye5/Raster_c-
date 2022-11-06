@@ -31,23 +31,56 @@ void ViewPort::InitViewPort(int ScreenWidth, int ScreenHeight)
 
 	projMatrix = getProjectionMat(fov, aspectRatio, farPlane, nearPlane);
 }
-string tempDirectoryToMesh = "house.obj";
+
 void ViewPort::InitGeometry()
 {
-	geometry = vector<Mesh>{Mesh()};
-	geometry[0].loadFromObj(tempDirectoryToMesh);
-	geometry[0].pos = vector3(0.0f, 0.0f, 5.0f);
+	geometry = vector<Mesh>{Mesh() , Mesh()};
+	geometry[0].loadFromObj("mainRoom2.obj");
+	geometry[0].pos = vector3(0.0f, 0.0f, 0.0f);
+	geometry[0].rot = vector3(degToRad(-180.0f), 0.0f, 0.0f);
+
+	geometry[1].loadFromObj("monke.obj");
+	geometry[1].pos = vector3(0.0f, -4.0f, 20.0f);
+	geometry[1].rot = vector3(0.0f, 0.0f, 1.0f);
+
+	//init lights --
 
 	dirLight = directionLight();
-	dirLight.lumens = 20.0f;
-	dirLight.ambientMulti = 1.0f;
-	dirLight.dir = vector3(-3.0f, 1.0f, -0.5f);
+	dirLight.lumens = 70.0f;
+	dirLight.ambientMulti = 0.5f;
+	dirLight.dir = vector3(0.5f, -1.0f, 0.5f);
+	dirLight.color = Color((unsigned char)255, (unsigned char)200, (unsigned char)200);
 
-	pointLights.push_back(pointLight());
-	pointLights[0].color = Color(255, 255, 255);
-	pointLights[0].lumens = 50.0f;
-	pointLights[0].range = 15.0f;
-	pointLights[0].pos = vector3(1.0f, 2.5f, 4.0f);
+	pointLights.push_back(pointLight()); //monkey Light 1
+	pointLights[0].color = Color((unsigned char)255, (unsigned char)0, (unsigned char)200);
+	pointLights[0].lumens = 200.0f;
+	pointLights[0].range = 6.0f;
+	pointLights[0].pos = vector3(1.25f, -3.5f, 0.0f);
+
+	pointLights.push_back(pointLight()); // monkey light 2
+	pointLights[1].color = Color((unsigned char)0, (unsigned char)200, (unsigned char)255);
+	pointLights[1].lumens = 200.0f;
+	pointLights[1].range = 6.0f;
+	pointLights[1].pos = vector3(-1.25f, -3.5f, 0.0f);
+
+	pointLights.push_back(pointLight()); // room light 
+	pointLights[2].color = Color((unsigned char)200, (unsigned char)200, (unsigned char)255);
+	pointLights[2].lumens = 700.0f;
+	pointLights[2].range = 100.0f;
+	pointLights[2].pos = vector3(0.0f, -8.0f, 0.0f);
+
+	pointLights.push_back(pointLight()); // sphere light
+	pointLights[3].color = Color((unsigned char)200, (unsigned char)200, (unsigned char)255);
+	pointLights[3].lumens = 1000.0f;
+	pointLights[3].range = 1000.0f;
+	pointLights[3].pos = vector3(-23.0f, -4.0f, 26.5f);
+
+	pointLights.push_back(pointLight()); // player light
+	pointLights[4].color = Color((unsigned char)255, (unsigned char)100, (unsigned char)255);
+	pointLights[4].lumens = 500.0f;
+	pointLights[4].range = 100.0f;
+	pointLights[4].pos = vector3(-0.0f, -0.0f,0.0f);
+
 }
 
 void ViewPort::render()
@@ -114,40 +147,69 @@ void ViewPort::render()
 			{
 				//============================================== Lighting ==============================================================================================
 				//dir light
+				vector<Color> lightCols;
 
 				vector3 direction = dirLight.dir;
 				toNormalized(direction);
 
-				float dotPod = toDotProduct(norm, direction);
+				float dotPod =  toDotProduct(direction, norm);
 
 				float brightness = dotPod * dirLight.lumens;
 				brightness += dirLight.ambientMulti * dirLight.lumens;
 				triColInfo colinfo = triColInfo();
 				
+				float r = clamp((float)dirLight.color.r / 255.0f, 0, 1.0f, false);
+				float g = clamp((float)dirLight.color.g / 255.0f, 0, 1.0f, false);
+				float b = clamp((float)dirLight.color.b / 255.0f, 0, 1.0f, false);
+
+				lightCols.push_back(Color(clamp(r * brightness, 0, 255, true), clamp(g * brightness, 0, 255, true), clamp(b * brightness, 0, 255, true)));
 
 				vector3 planeCenter;
 				planeCenter = averagePos(projected);
+
 				//point lights
-				float brightness2 = 0.0f;
-				for (auto x : pointLights)
+				for (auto& x : pointLights)
 				{
+					float brightness2 = 0.0f;
 					//add check for LOS to plane
 					// add check for dot product
+					float dist = getDistance(x.pos, planeCenter);
+
+					if (getDistance(x.pos, planeCenter) > x.range)
+						continue;
+
 					vector3 angle = planeCenter - x.pos;
 					toNormalized(angle);
-					dotProd = -toDotProduct(angle, norm);
+					dotPod = abs( toDotProduct(angle, norm));
 
-					brightness2 += ((( x.range + 1.0f / getDistance(x.pos,planeCenter) )/ getDistance(x.pos,planeCenter))
-						* x.lumens) * dotProd;
-				//	std::cout << brightness2 << "\n";
+					brightness2 = dotPod * x.lumens;
+					brightness2 *= (x.range / (dist + 1)) / x.range;
 
-				
+
+					float r = clamp( (float)x.color.r / 255.0f,0,1.0f,false);
+					float g = clamp((float)x.color.g / 255.0f, 0, 1.0f, false);
+					float b = clamp((float)x.color.b / 255.0f, 0, 1.0f, false);
+
+					lightCols.push_back(Color(clamp(r * brightness2, 0, 255, true), clamp(g * brightness2, 0, 255, true), clamp(b * brightness2, 0, 255, true)));
 				}	
-				clamp(brightness2, 0, 255, false);
+				
+				//add all together
+				
+				float rOut = 0.0f;
+				float gOut = 0.0f;
+				float bOut = 0.0f;
+				for (auto x : lightCols)
+				{
+					rOut += x.r;
+					gOut += x.g;
+					bOut += x.b;
+				}
+				rOut = clamp(rOut, 0, 255, true);
+				gOut = clamp(gOut, 0, 255, true);
+				bOut = clamp(bOut, 0, 255, true);
 
-				float overallBrightness = brightness + brightness2;
-				overallBrightness = clamp(overallBrightness, 0, 255, true);
-				colinfo.col = Color(overallBrightness, overallBrightness, overallBrightness);
+
+				colinfo.col = Color(rOut, gOut,bOut);
 				//============================================== wolrd to view space && Clipping ===========================
 				viewed.verticies[0] = multiplyMatrixVector(viewMat, projected.verticies[0]);
 				viewed.verticies[1] = multiplyMatrixVector(viewMat, projected.verticies[1]);
@@ -170,9 +232,9 @@ void ViewPort::render()
 					projected.verticies[1] = projected.verticies[1] / projected.verticies[1].w;
 					projected.verticies[2] = projected.verticies[2] / projected.verticies[2].w;
 
-					projected.textureCoords[0] = clippedTris[i].textureCoords[0];
-					projected.textureCoords[1] = clippedTris[i].textureCoords[1];
-					projected.textureCoords[2] = clippedTris[i].textureCoords[2];
+				//	projected.textureCoords[0] = clippedTris[i].textureCoords[0];
+			//		projected.textureCoords[1] = clippedTris[i].textureCoords[1];
+			//		projected.textureCoords[2] = clippedTris[i].textureCoords[2];
 
 					//apply lighting
 					projected.colInfo = colinfo;
@@ -254,7 +316,7 @@ void ViewPort::setPosition(int index, float x, float y, float z)
 
 void ViewPort::rotate(int index, float x, float y, float z)
 {
-	auto& g = geometry[0];
+	auto& g = geometry[index];
 	auto v = vector3(g.rot.x + x, g.rot.y + y, g.rot.z + z);
 	degToRad(v);
 	g.rot = v;
@@ -262,7 +324,7 @@ void ViewPort::rotate(int index, float x, float y, float z)
 
 void ViewPort::setRotation(int index, float x, float y, float z)
 {
-	auto& g = geometry[0];
+	auto& g = geometry[index];
 	auto v = vector3(x, y, z);
 		degToRad(v); 
 	g.rot =v;
@@ -278,6 +340,13 @@ void ViewPort::camSetRot(float x, float y, float z)
 	auto v =vector3(x, y, z);
 	degToRad(v);
 	camRot = v;
+}
+
+void ViewPort::setLightPos(int index,float x, float y, float z)
+{
+	auto& pl = pointLights[index];
+
+	pl.pos = vector3(x, y, z);
 }
 
 #pragma endregion

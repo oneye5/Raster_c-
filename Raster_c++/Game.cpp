@@ -5,7 +5,7 @@
 
 ViewPort vp = ViewPort();
 vector3 gameCamPos = vector3(0.0f,-4.0f,10.0f);
-vector3 gameCamRot = vector3(0.0f,0.0f,1.0f);
+vector3 gameCamRot = vector3(0.0f,-90.0f,0.0f);
 Input input = Input();
 vector3 moveMulti = vector3(0.1f, 0.1f, 0.1f);
 float fps=0.0f;
@@ -66,6 +66,7 @@ int Game::Update(float deltaTime)
 	vp.setRotation(1,gameCamRot.x * 4.0f,gameCamRot.y * 4.0f,gameCamRot.z * 4.0f);
 	vp.setLightPos(4, gameCamPos.x, gameCamPos.y, gameCamPos.z);
 	
+	std::cout << fps << "\n";
 	//std::cout << gameCamPos.x << " " << gameCamPos.y << " " << gameCamPos.z << "\n";
 	return renderPass(); //returns -1 on quit
 }

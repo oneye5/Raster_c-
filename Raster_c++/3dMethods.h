@@ -211,7 +211,7 @@ struct Mesh
 	vector3 pos;
 	vector3 rot;
 	vector<Triangle> triangles;
-	Mesh(vector<Triangle> tris,vector3 position = vector3(0,0,2) ,vector3 rotation = vector3(0,0,0))
+	Mesh(vector<Triangle> tris,vector3 position = vector3(0.0f,0.0f,0.0f) ,vector3 rotation = vector3(0.0f,0.0f,0.0f))
 	{
 		pos = position;
 		rot = rotation;
@@ -252,7 +252,7 @@ struct Mesh
 			
 			}
 
-			std::cout << "loading line "<<verticies.size()<< "\n";
+		//	std::cout << "loading line "<<verticies.size()<< "\n";
 		}
 		return true;
 	}
@@ -450,7 +450,7 @@ float clamp(float in, float min, float max, bool Round)
 vector3 averagePos(Triangle t)
 {
 	vector3 out;
-	for (auto v : t.verticies)
+	for (auto& v : t.verticies)
 	{
 		out = out + v;
 	}

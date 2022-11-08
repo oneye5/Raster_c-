@@ -10,8 +10,8 @@ int screenWidth;
 int screenHeight;
 
 const float nearPlane = 0.1f;
-const float farPlane = 1000.0f;
-const float fov =60.0f;
+const float farPlane = 1.0f;
+const float fov = 100.0f;
 float aspectRatio;
 
 
@@ -35,7 +35,7 @@ void ViewPort::InitViewPort(int ScreenWidth, int ScreenHeight)
 void ViewPort::InitGeometry()
 {
 	geometry = vector<Mesh>{Mesh() , Mesh()};
-	geometry[0].loadFromObj("mainRoom2.obj");
+	geometry[0].loadFromObj("detailedRoom.obj");
 	geometry[0].pos = vector3(0.0f, 0.0f, 0.0f);
 	geometry[0].rot = vector3(degToRad(-180.0f), 0.0f, 0.0f);
 
@@ -51,36 +51,35 @@ void ViewPort::InitGeometry()
 	dirLight.dir = vector3(0.5f, -1.0f, 0.5f);
 	dirLight.color = Color((unsigned char)255, (unsigned char)200, (unsigned char)200);
 
-	pointLights.push_back(pointLight()); //monkey Light 1
-	pointLights[0].color = Color((unsigned char)255, (unsigned char)0, (unsigned char)200);
-	pointLights[0].lumens = 200.0f;
-	pointLights[0].range = 6.0f;
-	pointLights[0].pos = vector3(1.25f, -3.5f, 0.0f);
+	pointLights.push_back(pointLight()); //sphereL
+	pointLights[0].color = Color((unsigned char)200, (unsigned char)200, (unsigned char)255);
+	pointLights[0].lumens = 400.0f;
+	pointLights[0].range = 100.0f;
+	pointLights[0].pos = vector3(-3.50869f, -0.99f, -11.8229f);
 
-	pointLights.push_back(pointLight()); // monkey light 2
-	pointLights[1].color = Color((unsigned char)0, (unsigned char)200, (unsigned char)255);
-	pointLights[1].lumens = 200.0f;
-	pointLights[1].range = 6.0f;
-	pointLights[1].pos = vector3(-1.25f, -3.5f, 0.0f);
+	pointLights.push_back(pointLight());  // hallL
+	pointLights[1].color = Color((unsigned char)200, (unsigned char)255, (unsigned char)255);
+	pointLights[1].lumens = 100.0f;
+	pointLights[1].range = 4.0f;
+	pointLights[1].pos = vector3(1.64197f, -1.0f, 0.297399f);
 
-	pointLights.push_back(pointLight()); // room light 
-	pointLights[2].color = Color((unsigned char)200, (unsigned char)200, (unsigned char)255);
-	pointLights[2].lumens = 700.0f;
-	pointLights[2].range = 100.0f;
-	pointLights[2].pos = vector3(0.0f, -8.0f, 0.0f);
+	pointLights.push_back(pointLight()); // tree
+	pointLights[2].color = Color((unsigned char)255, (unsigned char)0, (unsigned char)200);
+	pointLights[2].lumens = 400.0f;
+	pointLights[2].range = 20.0f;
+	pointLights[2].pos = vector3(36.4878f, -1.539999f, 16.8166f);
 
-	pointLights.push_back(pointLight()); // sphere light
-	pointLights[3].color = Color((unsigned char)200, (unsigned char)200, (unsigned char)255);
-	pointLights[3].lumens = 1000.0f;
-	pointLights[3].range = 1000.0f;
-	pointLights[3].pos = vector3(-23.0f, -4.0f, 26.5f);
+	pointLights.push_back(pointLight()); // tree2
+	pointLights[3].color = Color((unsigned char)255, (unsigned char)0, (unsigned char)200);
+	pointLights[3].lumens = 400.0f;
+	pointLights[3].range = 20.0f;
+	pointLights[3].pos = vector3(27.0426f, -4.31499f, 28.4406f);
 
-	pointLights.push_back(pointLight()); // player light
-	pointLights[4].color = Color((unsigned char)255, (unsigned char)100, (unsigned char)255);
+	pointLights.push_back(pointLight()); //highlight
+	pointLights[4].color = Color((unsigned char)255, (unsigned char)255, (unsigned char)200);
 	pointLights[4].lumens = 500.0f;
 	pointLights[4].range = 100.0f;
-	pointLights[4].pos = vector3(-0.0f, -0.0f,0.0f);
-
+	pointLights[4].pos = vector3(16.5254f, -9.56f, 18.3688f);
 }
 
 std::vector<std::future<void>> futures;
@@ -93,7 +92,7 @@ const int calcBatchCount = 8;
 	2  = 16.32
 	4  = 16.50
 	6  = 16.77
-	8  = 17.19
+	8  = 17.19 good sweetspot
 	10 = 16.39
 	12 = 16.88
 	16 = 16.40
@@ -104,15 +103,17 @@ const int calcBatchCount = 8;
 
 */
 
-void calculateTriBatch(vector<Triangle> tris, vector<Triangle>* toRender, Matrix4x4 transform, Matrix4x4 viewMat)
+void calculateTriBatch(vector<Triangle>* tris, vector<Triangle>* toRender, Matrix4x4 transform, Matrix4x4 viewMat, int from,int to)
 {
-	for (auto& tri : tris)
+	for (int i = from; i < to;i++)
 	{
+		auto& tri = tris->at(i);
+
 		Triangle triProjected;
 
-		triProjected.verticies[0] = multiplyMatrixVector(transform, tri.verticies[0]);
 		triProjected.verticies[1] = multiplyMatrixVector(transform, tri.verticies[1]);
 		triProjected.verticies[2] = multiplyMatrixVector(transform, tri.verticies[2]);
+		triProjected.verticies[0] = multiplyMatrixVector(transform, tri.verticies[0]);
 		//============================================= calc normals =======================================
 
 
@@ -126,7 +127,7 @@ void calculateTriBatch(vector<Triangle> tris, vector<Triangle>* toRender, Matrix
 
 		if (dotProd < 0.0f)
 		{
-#
+
 			//============================================== Lighting ==============================================================================================
 #pragma region lighting
 				//dir light
@@ -217,6 +218,7 @@ void calculateTriBatch(vector<Triangle> tris, vector<Triangle>* toRender, Matrix
 				triProjected.colInfo = colinfo;
 
 				normToScreen(screenWidth, screenHeight, triProjected);
+				triProjected.zAve = averagePos(triProjected).z;
 
 				std::lock_guard<std::mutex> lock(mutex);
 				toRender->push_back(triProjected);
@@ -224,11 +226,6 @@ void calculateTriBatch(vector<Triangle> tris, vector<Triangle>* toRender, Matrix
 			
 		}
 	}
-}
-const int drawBatchCount = 8;
-void drawBatch(vector<Triangle>)
-{
-
 }
 void ViewPort::render()
 {
@@ -267,29 +264,22 @@ void ViewPort::render()
 			
 			Matrix4x4 viewMat = matInverse(camMat);
 #pragma endregion
-			vector<vector<Triangle>> batches;
-			int batchIndex = 0;
-			for (int i = 0; i < calcBatchCount +1; i++)//populate batches
+
+			bool init = false;
+			int currentStart = 0;
+			for (int i = 0; i < calcBatchCount; i++)
 			{
-				batches.push_back(vector<Triangle>());
-			}
+				int currentEnd = roundf((float)obj.triangles.size() / (float)calcBatchCount);
+				currentEnd += currentStart + 1;
+				currentEnd = clamp(currentEnd, 0.0f, obj.triangles.size(), true);
 
-			for (auto& tri : obj.triangles)
-			{
-				if (batchIndex > calcBatchCount)
-				batchIndex = 0;
-
-				batches[batchIndex].push_back(tri);
-			
-				batchIndex++;
-			}
-
-		for (auto& x : batches)
-		{
 				futures.push_back(
-					std::async(std::launch::async, calculateTriBatch, x, &toRender, transform, viewMat)
+					std::async(std::launch::async, calculateTriBatch, &obj.triangles, &toRender, transform, viewMat, currentStart, currentEnd)
 				);
-		}
+
+
+				currentStart = currentEnd;
+			}
 		
 	}
 	for (int i = 0; i < futures.size(); i++) //wait for threads
@@ -301,37 +291,27 @@ void ViewPort::render()
 	std::sort(toRender.begin(), toRender.end(), [](Triangle &t1, Triangle &t2)
 		{
 
-			float z1 = averagePos(t1).z;
-			float z2 =averagePos(t2).z;
+			float z1 = t1.zAve;
+			float z2 = t2.zAve;
 			return z1 > z2;
 		});
 	//==============================================	draw	 =================================== 
-	for (auto& finnishedTri : toRender)
+	for (auto& t : toRender)
 	{
-		
-		/*
-		textureTri(
-			Projected.verticies[0].x, Projected.verticies[0].y,Projected.textureCoords[0].x,Projected.textureCoords[0].y,
-			Projected.verticies[1].x, Projected.verticies[1].y, Projected.textureCoords[1].x, Projected.textureCoords[1].y,
-			Projected.verticies[2].x, Projected.verticies[2].y, Projected.textureCoords[2].x, Projected.textureCoords[2].y,
-			tempTexture
-		);
-		*/
-		
-		
 		al_draw_filled_triangle(
-			finnishedTri.verticies[0].x,
-			finnishedTri.verticies[0].y,
+		t.verticies[0].x,
+		t.verticies[0].y,
 
-			finnishedTri.verticies[1].x,
-			finnishedTri.verticies[1].y,
+		t.verticies[1].x,
+		t.verticies[1].y,
 
-			finnishedTri.verticies[2].x,
-			finnishedTri.verticies[2].y,
+		t.verticies[2].x,
+		t.verticies[2].y,
 
-			al_map_rgb(finnishedTri.colInfo.col.r, finnishedTri.colInfo.col.g, finnishedTri.colInfo.col.b)
+		al_map_rgb(t.colInfo.col.r, t.colInfo.col.g, t.colInfo.col.b)
 		);
 	}
+	al_flip_display();
 }
 
 #pragma region game renderer interaction

@@ -13,59 +13,59 @@
 using std::vector;
 
 
-struct Vector4
+struct vector4
 {
 public:
 	float x;
 	float y;
 	float z;
 	float w;
-	Vector4(float X = 0, float Y = 0, float Z = 0,float W = 1.0f)
+	vector4(float X = 0, float Y = 0, float Z = 0,float W = 1.0f)
 	{
 		x = X;
 		y = Y;
 		z = Z;
 		w = W;
 	}
-	friend Vector4 operator+(const Vector4& v1, const Vector4& v2)
+	friend vector4 operator+(const vector4& v1, const vector4& v2)
 	{
 		float x = v1.x + v2.x;
 		float y = v1.y + v2.y;
 		float z = v1.z + v2.z;
 		float w = v1.w + v2.w;
-		return Vector4(x, y, z,w);
+		return vector4(x, y, z,w);
 	}
-	friend Vector4 operator-(const Vector4& v1, const Vector4& v2)
+	friend vector4 operator-(const vector4& v1, const vector4& v2)
 	{
 		float x = v1.x - v2.x;
 		float y = v1.y - v2.y;
 		float z = v1.z - v2.z;
 		float w = v1.w - v2.w;
-		return Vector4(x, y, z,w);
+		return vector4(x, y, z,w);
 	}
-	friend Vector4 operator*(const Vector4& v1, const Vector4& v2)
+	friend vector4 operator*(const vector4& v1, const vector4& v2)
 	{
 		float x = v1.x * v2.x;
 		float y = v1.y * v2.y;
 		float z = v1.z * v2.z;
 		float w = v1.w * v2.w;
-		return Vector4(x, y, z,w);
+		return vector4(x, y, z,w);
 	}
-	friend Vector4 operator*(const Vector4& v1, const float v2)
+	friend vector4 operator*(const vector4& v1, const float v2)
 	{
 		float x = v1.x * v2;
 		float y = v1.y * v2;
 		float z = v1.z * v2;
 		float w = v1.w * v2;
-		return Vector4(x, y, z,w);
+		return vector4(x, y, z,w);
 	}
-	friend Vector4 operator/(const Vector4& v1, const float v2)
+	friend vector4 operator/(const vector4& v1, const float v2)
 	{
 		float x = v1.x / v2;
 		float y = v1.y / v2;
 		float z = v1.z / v2;
 		float w = v1.w / v2;
-		return Vector4(x, y, z,w);
+		return vector4(x, y, z,w);
 	}
 };
 struct vector3
@@ -80,7 +80,7 @@ public:
 		y = Y;
 		z = Z;
 	}
-	vector3(Vector4 v)
+	vector3(vector4 v)
 	{
 		x = v.x;
 		y = v.y;
@@ -132,7 +132,7 @@ public:
 		x = X;
 		y = Y;
 	}
-	vector2(Vector4 v)
+	vector2(vector4 v)
 	{
 		x = v.x;
 		y = v.y;
@@ -186,22 +186,23 @@ struct triColInfo
 };
 struct Triangle
 {
-	vector< Vector4> verticies;
+	vector< vector4> verticies;
 	triColInfo colInfo;
-	vector<vector2> textureCoords = vector<vector2>{vector2(),vector2() ,vector2() };
-	Triangle(vector<Vector4> v)
+	//vector<vector2> textureCoords = vector<vector2>{vector2(),vector2() ,vector2() };
+	float zAve;//average vert depth
+	Triangle(vector<vector4> v)
 	{
 		verticies = v;
 	}
 	Triangle(float x,float y, float z, float x1, float y1, float z1,float x2, float y2,float z2)
 	{
-		verticies = vector<Vector4>{ Vector4(x,y,z,1.0f), Vector4(x1,y1,z1,1.0f),Vector4(x2,y2,z2,1.0f)};
+		verticies = vector<vector4>{ vector4(x,y,z,1.0f), vector4(x1,y1,z1,1.0f),vector4(x2,y2,z2,1.0f)};
 	}
 	Triangle()
 	{
-		verticies = vector<Vector4>{ Vector4(0,0,0), Vector4(0,0,0),Vector4(0,0,0) };
+		verticies = vector<vector4>{ vector4(0,0,0), vector4(0,0,0),vector4(0,0,0) };
 	}
-	Triangle(Vector4 v1, Vector4 v2, Vector4 v3)
+	Triangle(vector4 v1, vector4 v2, vector4 v3)
 	{
 		verticies = { v1,v2,v3 };
 	}
@@ -223,7 +224,7 @@ struct Mesh
 		if (!f.is_open())
 			return false;
 
-		vector<Vector4> verticies;
+		vector<vector4> verticies;
 		while (!f.eof())
 		{
 			char line[10000];
@@ -233,7 +234,7 @@ struct Mesh
 			char temp;
 			if (line[0] == 'v')
 			{
-				Vector4 ver;
+				vector4 ver;
 				str >> temp >> ver.x >> ver.y >> ver.z;
 				ver.w = 1.0f;
 				verticies.push_back(ver);
@@ -270,19 +271,19 @@ struct Matrix4x4
 		return matrix;
 	}
 };
-Vector4 multiplyMatrixVector( Matrix4x4& matrix,Vector4& Input)
+vector4 multiplyMatrixVector( Matrix4x4& matrix,vector4& Input)
 {
-	Vector4 v;
+	vector4 v;
 	v.y = Input.x * matrix.m[0][1] + Input.y * matrix.m[1][1] + Input.z * matrix.m[2][1] + Input.w * matrix.m[3][1];
 	v.z = Input.x * matrix.m[0][2] + Input.y * matrix.m[1][2] + Input.z * matrix.m[2][2] + Input.w * matrix.m[3][2];
 	v.x = Input.x * matrix.m[0][0] + Input.y * matrix.m[1][0] + Input.z * matrix.m[2][0] + Input.w * matrix.m[3][0];
 	v.w = Input.x * matrix.m[0][3] + Input.y * matrix.m[1][3] + Input.z * matrix.m[2][3] + Input.w * matrix.m[3][3];
 	return v;
 }
-Vector4 multiplyMatrixVector(Matrix4x4& matrix ,vector3& in)
+vector4 multiplyMatrixVector(Matrix4x4& matrix ,vector3& in)
 {
-	Vector4 v;
-	Vector4 Input = Vector4(in.x, in.y, in.z, 1.0f);
+	vector4 v;
+	vector4 Input = vector4(in.x, in.y, in.z, 1.0f);
 	v.y = Input.x * matrix.m[0][1] + Input.y * matrix.m[1][1] + Input.z * matrix.m[2][1] + Input.w * matrix.m[3][1];
 	v.z = Input.x * matrix.m[0][2] + Input.y * matrix.m[1][2] + Input.z * matrix.m[2][2] + Input.w * matrix.m[3][2];
 	v.x = Input.x * matrix.m[0][0] + Input.y * matrix.m[1][0] + Input.z * matrix.m[2][0] + Input.w * matrix.m[3][0];
@@ -334,7 +335,7 @@ Matrix4x4 getProjectionMat(float fov, float aspectRatio,float farPlane, float ne
 	projMatrix.m[3][3] = 0.0f;
 	return projMatrix;
 }
-Matrix4x4 getTranslationMat(vector3 pos)
+Matrix4x4 getTranslationMat(vector3& pos)
 {
 	Matrix4x4 matrix;
 	matrix.m[0][0] = 1.0f;
@@ -380,14 +381,14 @@ void toNormalized(vector3& v)
 	if(magnitude != 0)
 	v = vector3(v.x / magnitude, v.y / magnitude, v.z / magnitude);
 }
-void toDotProduct(vector3 a /*must be normals*/, vector3 b, vector3 camPos, float& out)
+void toDotProduct(vector3& a /*must be normals*/, vector3& b, vector3& camPos, float& out)
 {
 	out =
 		a.x * (b.x - camPos.x) +
 		a.y * (b.y - camPos.y) +
 		a.z * (b.z - camPos.z);
 }
-float toDotProduct(vector3 a /*must be normals*/, vector3 b, vector3 camPos)
+float toDotProduct(vector3& a /*must be normals*/, vector3 b, vector3 camPos)
 {
 	float	out =
 		a.x * (b.x - camPos.x) +
@@ -395,7 +396,7 @@ float toDotProduct(vector3 a /*must be normals*/, vector3 b, vector3 camPos)
 		a.z * (b.z - camPos.z);
 	return out;
 }
-float toDotProduct(vector3 a /*must be normals*/, vector3 b)
+float toDotProduct(vector3& a /*must be normals*/, vector3& b)
 {
 	float	out =
 		a.x * (b.x) +
@@ -403,7 +404,7 @@ float toDotProduct(vector3 a /*must be normals*/, vector3 b)
 		a.z * (b.z);
 	return out;
 }
-vector3 crossProduct(vector3 v1, vector3 v2)
+vector3 crossProduct(vector3& v1, vector3& v2)
 {
 	vector3 v;
 	v.x = v1.y * v2.z - v1.z * v2.y;
@@ -447,7 +448,7 @@ float clamp(float in, float min, float max, bool Round)
 	}
 	return in;
 }
-vector3 averagePos(Triangle t)
+vector3 averagePos(Triangle& t)
 {
 	vector3 out;
 	for (auto& v : t.verticies)
@@ -456,7 +457,7 @@ vector3 averagePos(Triangle t)
 	}
 	return out / 3.0f;
 }
-float magnitude(vector3 v)
+float magnitude(vector3& v)
 {
 	return sqrtf(toDotProduct(v, v));
 }
@@ -514,7 +515,7 @@ vector3 intersectPlane(vector3& plane_p, vector3& plane_n, vector3& lineStart, v
 	vector3 lineToIntersect = lineStartToEnd * t;
 	return lineStart + lineToIntersect;
 }
-vector3 intersectPlane(vector3& plane_p, vector3& plane_n, Vector4& lineStart4, Vector4& lineEnd4,float& t)
+vector3 intersectPlane(vector3& plane_p, vector3& plane_n, vector4& lineStart4, vector4& lineEnd4,float& t)
 {
 	auto lineStart = vector3(lineStart4);
 	auto lineEnd = vector3(lineEnd4);
@@ -527,7 +528,7 @@ vector3 intersectPlane(vector3& plane_p, vector3& plane_n, Vector4& lineStart4, 
 	vector3 lineToIntersect = lineStartToEnd * t;
 	return lineStart + lineToIntersect;
 }
-float dist(Vector4& p, vector3 plane_n,vector3 plane_p)
+float dist(vector4& p, vector3 plane_n,vector3 plane_p)
 {
 	vector3 n = vector3(p);
 	toNormalized(n);
@@ -535,16 +536,14 @@ float dist(Vector4& p, vector3 plane_n,vector3 plane_p)
 }
 int TriClipFromPlane(vector3 plane_p, vector3 plane_n, Triangle& in_tri, Triangle& out_tri1, Triangle& out_tri2)
 {
-	// Make sure plane normal is indeed normal
 	toNormalized(plane_n);
-
 	// Create two temporary storage arrays to classify points either side of plane
 	// If distance sign is positive, point lies on "inside" of plane
-	Vector4* inside_points[3];  int nInsidePointCount = 0;
-	Vector4* outside_points[3]; int nOutsidePointCount = 0;
+	vector4* inside_points[3];  int nInsidePointCount = 0;
+	vector4* outside_points[3]; int nOutsidePointCount = 0;
 
-	Vector4* inside_texture[3]; int insideTexCount = 0;
-	Vector4* outside_texture[3]; int outsideTexCount = 0;
+	//vector4* inside_texture[3]; int insideTexCount = 0;
+//	vector4* outside_texture[3]; int outsideTexCount = 0;
 	// Get signed distance of each point in triangle to plane
 	float d0 = dist(in_tri.verticies[0],plane_n,plane_p);
 	float d1 = dist(in_tri.verticies[1],plane_n,plane_p);
@@ -553,52 +552,51 @@ int TriClipFromPlane(vector3 plane_p, vector3 plane_n, Triangle& in_tri, Triangl
 	if (d0 >= 0) 
 	{
 		inside_points[nInsidePointCount] = &in_tri.verticies[0];
-		inside_texture[insideTexCount] = &in_tri.verticies[0];
-		insideTexCount++;
+	//	inside_texture[insideTexCount] = &in_tri.verticies[0];
+	//	insideTexCount++;
 		nInsidePointCount++;
 		
 	}
 	else 
 	{
 		outside_points[nOutsidePointCount] = &in_tri.verticies[0];
-		outside_texture[outsideTexCount] = &in_tri.verticies[0];
-		outsideTexCount++;
+	//	outside_texture[outsideTexCount] = &in_tri.verticies[0];
+	//	outsideTexCount++;
 		nOutsidePointCount++;
 	}
 
 	if (d1 >= 0)
 	{ 
 		inside_points[nInsidePointCount] = &in_tri.verticies[1];
-		inside_texture[insideTexCount] = &in_tri.verticies[1];
-		insideTexCount++;
+	//	inside_texture[insideTexCount] = &in_tri.verticies[1];
+	//	insideTexCount++;
 		nInsidePointCount++;
 	}
 	else 
 	{
 		outside_points[nOutsidePointCount] = &in_tri.verticies[1];
-		outside_texture[outsideTexCount] = &in_tri.verticies[1];
-		outsideTexCount++;
+	//	outside_texture[outsideTexCount] = &in_tri.verticies[1];
+	//	outsideTexCount++;
 		nOutsidePointCount++;
 	}
 
 	if (d2 >= 0)
 	{ 
 		inside_points[nInsidePointCount] = &in_tri.verticies[2];
-		inside_texture[insideTexCount] = &in_tri.verticies[2];
-		insideTexCount++;
+	//	inside_texture[insideTexCount] = &in_tri.verticies[2];
+	//	insideTexCount++;
 		nInsidePointCount++;
 	}
 	else 
 	{
 		outside_points[nOutsidePointCount] = &in_tri.verticies[2];
-		outside_texture[outsideTexCount] = &in_tri.verticies[2];
-		outsideTexCount++;
+	//	outside_texture[outsideTexCount] = &in_tri.verticies[2];
+	//	outsideTexCount++;
 		nOutsidePointCount++;
 	}
 
 	// Now classify triangle points, and break the input triangle into 
-	// smaller output triangles if required. There are four possible
-	// outcomes...
+	// smaller output triangles if required. There are four possible outcomes
 
 	if (nInsidePointCount == 0)
 	{
@@ -628,21 +626,21 @@ int TriClipFromPlane(vector3 plane_p, vector3 plane_n, Triangle& in_tri, Triangl
 
 		// The inside point is valid, so keep that...
 		out_tri1.verticies[0] = *inside_points[0];
-		out_tri1.textureCoords[0] = vector2(* inside_texture[0]);
+	//	out_tri1.textureCoords[0] = vector2(* inside_texture[0]);
 		// but the two new points are at the locations where the 
 		// original sides of the triangle (lines) intersect with the plane
 	
 		float t;
 		auto temp1 = intersectPlane(plane_p, plane_n,  *inside_points[0], *outside_points[0],t) ;
-		out_tri1.textureCoords[1] = t * (outside_points[0]->x - inside_texture[0]->x  ) + inside_texture[0]->x;
-		out_tri1.textureCoords[1] = t * (outside_points[0]->y - inside_texture[0]->y  ) + inside_texture[0]->y;
+	//	out_tri1.textureCoords[1] = t * (outside_points[0]->x - inside_texture[0]->x  ) + inside_texture[0]->x;
+	//	out_tri1.textureCoords[1] = t * (outside_points[0]->y - inside_texture[0]->y  ) + inside_texture[0]->y;
 
 		auto temp2 = intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[1],t);
-		out_tri1.textureCoords[2] = t * (outside_points[0]->x - inside_texture[0]->x) + inside_texture[0]->x;
-		out_tri1.textureCoords[2] = t * (outside_points[0]->y - inside_texture[0]->y) + inside_texture[0]->y;
+	//	out_tri1.textureCoords[2] = t * (outside_points[0]->x - inside_texture[0]->x) + inside_texture[0]->x;
+	//	out_tri1.textureCoords[2] = t * (outside_points[0]->y - inside_texture[0]->y) + inside_texture[0]->y;
 
-		out_tri1.verticies[1] = Vector4( temp1.x,temp1.y,temp1.z);
-		out_tri1.verticies[2] = Vector4(temp2.x, temp2.y, temp2.z);
+		out_tri1.verticies[1] = vector4( temp1.x,temp1.y,temp1.z);
+		out_tri1.verticies[2] = vector4(temp2.x, temp2.y, temp2.z);
 
 		return 1; // Return the newly formed single triangle
 	}
@@ -662,12 +660,12 @@ int TriClipFromPlane(vector3 plane_p, vector3 plane_n, Triangle& in_tri, Triangl
 		// intersects with the plane
 		out_tri1.verticies[0] = *inside_points[0];
 		out_tri1.verticies[1] = *inside_points[1];
-		out_tri1.textureCoords[0]  = vector2(*inside_texture[0]);
-		out_tri1.textureCoords[1] = vector2(*inside_texture[1]);
+	//	out_tri1.textureCoords[0]  = vector2(*inside_texture[0]);
+	//	out_tri1.textureCoords[1] = vector2(*inside_texture[1]);
 
 		float t;
 		 auto temp1 = intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[0],t);
-		 out_tri1.verticies[2] = Vector4(temp1.x, temp1.y, temp1.z);
+		 out_tri1.verticies[2] = vector4(temp1.x, temp1.y, temp1.z);
 		// The second triangle is composed of one of he inside points, a
 		// new point determined by the intersection of the other side of the 
 		// triangle and the plane, and the newly created point above
@@ -676,9 +674,10 @@ int TriClipFromPlane(vector3 plane_p, vector3 plane_n, Triangle& in_tri, Triangl
 
 
 		auto temp2 = intersectPlane(plane_p, plane_n, *inside_points[1], *outside_points[0],t);
-		out_tri2.verticies[2] = Vector4(temp2.x,temp2.y,temp2.z);
+		out_tri2.verticies[2] = vector4(temp2.x,temp2.y,temp2.z);
 		return 2; // Return two newly formed triangles which form a quad
 	}
+	return 1;
 }
 Color sampleTexture(vector2 v, ALLEGRO_BITMAP* t)
 {

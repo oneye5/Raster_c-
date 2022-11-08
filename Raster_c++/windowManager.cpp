@@ -31,7 +31,6 @@ void WindowManager::initWindow()
 int WindowManager::windowTick()
 {
 #pragma endregion
-	al_flip_display();
 		//event handeling
 #pragma region eventHandler
 			

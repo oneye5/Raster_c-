@@ -1,6 +1,10 @@
-﻿renderer.obj : error LNK2001: unresolved external symbol __imp__al_draw_triangle
+﻿  Game.cpp
+  renderer.cpp
+C:\Users\ocjla\source\repos\Raster_cpp\Raster_c++\renderer.cpp(297,20): warning C4018: '<': signed/unsigned mismatch
+  windowManager.cpp
+  winEntry.cpp
 renderer.obj : error LNK2001: unresolved external symbol __imp__al_draw_filled_triangle
 windowManager.obj : error LNK2001: unresolved external symbol __imp__al_init_image_addon
 windowManager.obj : error LNK2001: unresolved external symbol __imp__al_shutdown_image_addon
 windowManager.obj : error LNK2001: unresolved external symbol __imp__al_init_primitives_addon
-C:\Users\ocjla\source\repos\Raster_c++\Release\Raster_c++.exe : fatal error LNK1120: 5 unresolved externals
+C:\Users\ocjla\source\repos\Raster_cpp\Release\Raster_c++.exe : fatal error LNK1120: 4 unresolved externals

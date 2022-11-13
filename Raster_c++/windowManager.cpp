@@ -25,6 +25,7 @@ void WindowManager::initWindow()
 	al_register_event_source(Queue, al_get_keyboard_event_source());
 	al_register_event_source(Queue, al_get_display_event_source(Display));
 	
+
 }
 
 

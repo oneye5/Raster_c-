@@ -9,6 +9,12 @@
 #include "allegro5/allegro.h"
 #include "allegro5/bitmap.h"
 #include"allegro5/allegro_image.h"
+#include "assimp/BaseImporter.h"
+#include "assimp/Importer.hpp"
+#include "assimp/postprocess.h"
+#include "assimp/scene.h"
+#include "assimp/cimport.h"
+
 #pragma warning(disable : 4996)
 using std::vector;
 
@@ -151,11 +157,23 @@ float degToRad(float deg)
 {
 	return(deg * (PI / 180));
 }
+
+struct Texture
+{
+	ALLEGRO_BITMAP* tex;
+	std::string path;
+	void load(std::string filePath)
+	{
+		tex = al_load_bitmap( filePath.c_str());
+		path = filePath;
+	}
+};
 struct Color
 {
 	unsigned char r;
 	unsigned char g;
 	unsigned char b;
+	unsigned char a = 255;
 	Color(unsigned char R, unsigned char G, unsigned char B)
 	{
 		r = R;
@@ -179,15 +197,30 @@ struct Color
 		g = c.g;
 		b = c.b;
 	}
+	friend Color operator + (const Color& c1, const Color c2)
+	{
+		Color c3 = Color((unsigned char)0, (unsigned char)0, (unsigned char)0);
+		c3.r = c1.r + c2.r;
+		c3.g = c1.g + c2.g;
+		c3.b = c1.b + c2.b;
+		return c3;
+	}
+	
 };
 struct triColInfo
 {
-	Color col;
+	//Color col;
+	vector< ALLEGRO_COLOR> al_col;
 };
 struct Triangle
 {
 	vector< vector4> verticies;
+	vector3 normal;
+	float u;
+	float v;
 	triColInfo colInfo;
+	unsigned int meshIndex;
+
 	//vector<vector2> textureCoords = vector<vector2>{vector2(),vector2() ,vector2() };
 	float zAve;//average vert depth
 	Triangle(vector<vector4> v)
@@ -212,6 +245,9 @@ struct Mesh
 	vector3 pos;
 	vector3 rot;
 	vector<Triangle> triangles;
+	int texIndex;
+	Texture texture;
+	std::string name;
 	Mesh(vector<Triangle> tris,vector3 position = vector3(0.0f,0.0f,0.0f) ,vector3 rotation = vector3(0.0f,0.0f,0.0f))
 	{
 		pos = position;
@@ -257,6 +293,43 @@ struct Mesh
 		}
 		return true;
 	}
+	bool loadTexture(std::string dir)
+	{
+		std::ifstream f(dir);
+		if (!f.is_open())
+			return false;
+		size_t size = f.tellg();
+		std::string buffer(size, ' ');
+		f.seekg(0);
+		f.read(&buffer[0], size);
+
+		string lookFor = "map_Kd";
+		if (!buffer.find(lookFor)) //if contains texture
+			return false;
+
+		auto at = buffer.find(lookFor);
+		int startIndex = at + lookFor.size();
+		auto toCheck = buffer.substr(startIndex, buffer.size());
+		std::string out;
+		for (auto x : toCheck)
+		{
+			if (x != ' ')
+			{
+				out += x;
+			}
+		}
+
+		auto* textr = al_load_bitmap(out.c_str());
+		if (textr == nullptr)
+			return false;
+		else
+		{
+			texture = Texture();
+			texture.tex = textr;
+			texture.path = out;
+		}
+	}
+	
 	Mesh() {};
 };
 struct Matrix4x4
@@ -271,6 +344,7 @@ struct Matrix4x4
 		return matrix;
 	}
 };
+
 vector4 multiplyMatrixVector( Matrix4x4& matrix,vector4& Input)
 {
 	vector4 v;
@@ -690,10 +764,7 @@ Color sampleTexture(vector2 v, ALLEGRO_BITMAP* t)
 
 	return	al_get_pixel(t, x, y);
 }
-void textureTri(			//textureing not implimented due to per pixel rendering being too slow, this is likley because of the heavy cpu bias in this program
-	int x1, int y1, float u1, float v1,
-	int x2, int y2, float u2, float v2,
-	int x3, int y3, float u3, float v3,ALLEGRO_BITMAP* texture)
+void textureTri(int x1, int y1, float u1, float v1,int x2, int y2, float u2, float v2,int x3, int y3, float u3, float v3,ALLEGRO_BITMAP* texture)
 {
 	if (y2 < y1)
 	{
@@ -860,3 +931,8 @@ float getDistance(vector3 v1, vector3 v2)
 	auto out =	v1 - v2;
 	return	magnitude(out);
 }
+
+struct sceneDesc
+{
+	vector<Mesh> geometry;
+};

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include<future>
 
+
 using std::string;
 
 int screenWidth;
@@ -16,12 +17,13 @@ float aspectRatio;
 
 
 Matrix4x4 projMatrix;
- vector<Mesh>geometry;
  directionLight dirLight;
  vector<pointLight> pointLights;
 
  vector3 camPos;
  vector3 camRot = vector3(0.0f, 0.0f, 1.0f);
+
+ sceneDesc sceneMain;
 
 void ViewPort::InitViewPort(int ScreenWidth, int ScreenHeight)
 {
@@ -34,14 +36,7 @@ void ViewPort::InitViewPort(int ScreenWidth, int ScreenHeight)
 
 void ViewPort::InitGeometry()
 {
-	geometry = vector<Mesh>{Mesh() , Mesh()};
-	geometry[0].loadFromObj("detailedRoom.obj");
-	geometry[0].pos = vector3(0.0f, 0.0f, 0.0f);
-	geometry[0].rot = vector3(degToRad(-180.0f), 0.0f, 0.0f);
-
-	geometry[1].loadFromObj("monke.obj");
-	geometry[1].pos = vector3(0.0f, -4.0f, 20.0f);
-	geometry[1].rot = vector3(0.0f, 0.0f, 1.0f);
+	
 
 	//init lights --
 
@@ -49,13 +44,13 @@ void ViewPort::InitGeometry()
 	dirLight.lumens = 70.0f;
 	dirLight.ambientMulti = 0.5f;
 	dirLight.dir = vector3(0.5f, -1.0f, 0.5f);
-	dirLight.color = Color((unsigned char)255, (unsigned char)200, (unsigned char)200);
+	dirLight.color = Color((unsigned char)255, (unsigned char)100, (unsigned char)200);
 
 	pointLights.push_back(pointLight()); //sphereL
 	pointLights[0].color = Color((unsigned char)200, (unsigned char)200, (unsigned char)255);
 	pointLights[0].lumens = 400.0f;
-	pointLights[0].range = 100.0f;
-	pointLights[0].pos = vector3(-3.50869f, -0.99f, -11.8229f);
+	pointLights[0].range = 10.0f;
+	pointLights[0].pos = vector3(-3.29036f, -1.16f, -11.601f);
 
 	pointLights.push_back(pointLight());  // hallL
 	pointLights[1].color = Color((unsigned char)200, (unsigned char)255, (unsigned char)255);
@@ -67,19 +62,31 @@ void ViewPort::InitGeometry()
 	pointLights[2].color = Color((unsigned char)255, (unsigned char)0, (unsigned char)200);
 	pointLights[2].lumens = 400.0f;
 	pointLights[2].range = 20.0f;
-	pointLights[2].pos = vector3(36.4878f, -1.539999f, 16.8166f);
+	pointLights[2].pos = vector3(35.4461f, -1.955f, 14.3487f);
 
 	pointLights.push_back(pointLight()); // tree2
 	pointLights[3].color = Color((unsigned char)255, (unsigned char)0, (unsigned char)200);
 	pointLights[3].lumens = 400.0f;
 	pointLights[3].range = 20.0f;
-	pointLights[3].pos = vector3(27.0426f, -4.31499f, 28.4406f);
+	pointLights[3].pos = vector3(26.5184f, -7.04521f, 27.903f);
 
 	pointLights.push_back(pointLight()); //highlight
 	pointLights[4].color = Color((unsigned char)255, (unsigned char)255, (unsigned char)200);
 	pointLights[4].lumens = 500.0f;
 	pointLights[4].range = 100.0f;
 	pointLights[4].pos = vector3(16.5254f, -9.56f, 18.3688f);
+
+	pointLights.push_back(pointLight()); //CITY LIGHT
+	pointLights[5].color = Color((unsigned char)255, (unsigned char)0, (unsigned char)200);
+	pointLights[5].lumens = 500.0f;
+	pointLights[5].range = 100.0f;
+	pointLights[5].pos = vector3(73.5361f, -4.59f, 37.8652f);
+	
+	pointLights.push_back(pointLight()); //CITY LIGHT 2
+	pointLights[6].color = Color((unsigned char)100, (unsigned char)240, (unsigned char)255);
+	pointLights[6].lumens = 500.0f;
+	pointLights[6].range = 100.0f;
+	pointLights[6].pos = vector3(80.5604f, -5.55999f, 8.2133f);
 }
 
 std::vector<std::future<void>> futures;
@@ -130,7 +137,60 @@ void calculateTriBatch(vector<Triangle>* tris, vector<Triangle>* toRender, Matri
 
 			//============================================== Lighting ==============================================================================================
 #pragma region lighting
+			//direction lighting
+			triColInfo colinfo = triColInfo();
+			vector<Color>  colors;
+			vector3 direction = dirLight.dir;
+			toNormalized(direction);
+			float dotPod = toDotProduct(direction, norm);
+			float brightness = dotPod * dirLight.lumens;
+			brightness += dirLight.ambientMulti * dirLight.lumens;
+
+			float r = dirLight.color.r; r = r / 255.0f; r *= brightness; r = clamp(r, 0, 255, true);
+			float g = dirLight.color.g; g = g / 255.0f; g *= brightness; g = clamp(g, 0, 255, true);
+			float b = dirLight.color.b; b = b / 255.0f; b *= brightness; b = clamp(b, 0, 255, true);
+			
+			colors.push_back(Color(r, g, b)); colors.push_back(Color(r, g, b)); colors.push_back(Color(r, g, b));
+
+			for (int i = 0; i < 3; i++) //per vert lighting
+			{
+				Color vertCol;
+				vector3 vertPos = tri.verticies[i];
+				for (auto& x : pointLights)
+				{
+					float dist = getDistance(x.pos, vertPos);
+
+					if (dist > x.range)
+						continue;
+
+					vector3 angle = vertPos - x.pos;
+					toNormalized(angle);
+					dotPod = abs(toDotProduct(angle, norm));
+					brightness = dotPod * x.lumens;
+					brightness *= (x.range / (dist + 1)) / x.range;
+
+					r = x.color.r; r = r / 255.0f;r *= brightness;	r = clamp(r, 0, 255, true);
+					g = x.color.g; g = g / 255.0f; g *= brightness; g = clamp(g, 0, 255, true);
+					b = x.color.b; b = b / 255.0f; b *= brightness; b = clamp(b, 0, 255, true);
+
+					r = r + colors[i].r;
+					g = g + colors[i].g;
+					b = b + colors[i].b;
+
+					colors[i] = Color(
+						clamp(r, 0, 255, true),
+						clamp(g, 0, 255, true),
+						clamp(b, 0, 255, true)
+					);
+				}
+			}
+			colinfo.al_col = vector<ALLEGRO_COLOR>();
+			colinfo.al_col.push_back(al_map_rgb(colors[0].r, colors[0].g, colors[0].b));
+			colinfo.al_col.push_back(al_map_rgb(colors[1].r, colors[1].g, colors[1].b));
+			colinfo.al_col.push_back(al_map_rgb(colors[2].r, colors[2].g, colors[2].b));
 				//dir light
+			/*
+			
 			vector<Color> lightCols;
 
 			vector3 direction = dirLight.dir;
@@ -193,7 +253,8 @@ void calculateTriBatch(vector<Triangle>* tris, vector<Triangle>* toRender, Matri
 			bOut = clamp(bOut, 0, 255, true);
 
 
-			colinfo.col = Color(rOut, gOut, bOut);
+			colinfo.al_col = al_map_rgb(rOut, gOut, bOut);
+			*/
 #pragma endregion
 			//============================================== wolrd to view space && Clipping ===========================
 			triProjected.verticies[0] = multiplyMatrixVector(viewMat, triProjected.verticies[0]);
@@ -230,7 +291,7 @@ void calculateTriBatch(vector<Triangle>* tris, vector<Triangle>* toRender, Matri
 void ViewPort::render()
 {
 	vector<Triangle> toRender;
-	for (auto& obj : geometry)
+	for (auto& obj : sceneMain.geometry)
 	{
 		//================================================= rotate & translate =====================================
 #pragma region setupVars
@@ -298,6 +359,32 @@ void ViewPort::render()
 	//==============================================	draw	 =================================== 
 	for (auto& t : toRender)
 	{
+		ALLEGRO_VERTEX vtx[3];
+		 vtx[0].x = t.verticies[0].x;
+		 vtx[0].y = t.verticies[0].y;
+		 vtx[0].z = 0;
+		 vtx[0].color = t.colInfo.al_col[0];
+		 vtx[0].u = 1;
+		 vtx[0].v = 1;
+
+		  vtx[1].x = t.verticies[1].x;
+		 vtx[1].y = t.verticies[1].y;
+		 vtx[1].z = -0;
+		 vtx[1].color = t.colInfo.al_col[1];
+		 vtx[1].u = 100;
+		 vtx[1].v = 100;
+
+		 vtx[2].x = t.verticies[2].x;
+		 vtx[2].y = t.verticies[2].y;
+		 vtx[2].z = -0;
+		 vtx[2].color = t.colInfo.al_col[2];
+		 vtx[2].u = 100;
+		 vtx[2].v = 100;
+
+		 
+
+		al_draw_prim(vtx, NULL,NULL, 0, 3, ALLEGRO_PRIM_TRIANGLE_FAN);
+		/*
 		al_draw_filled_triangle(
 		t.verticies[0].x,
 		t.verticies[0].y,
@@ -308,28 +395,33 @@ void ViewPort::render()
 		t.verticies[2].x,
 		t.verticies[2].y,
 
-		al_map_rgb(t.colInfo.col.r, t.colInfo.col.g, t.colInfo.col.b)
+		t.colInfo.al_col
 		);
+		*/
+
+
+		//al_draw_triangle(	t.verticies[0].x,t.verticies[0].y,t.verticies[1].x,	t.verticies[1].y,t.verticies[2].x,t.verticies[2].y,t.colInfo.al_col,1.0f);
 	}
+	
 	al_flip_display();
 }
 
 #pragma region game renderer interaction
 void ViewPort::translate(int index, float x, float y, float z)
 {
-	auto& g = geometry[0];
+	auto& g = sceneMain.geometry[0];
 	g.pos = vector3(g.pos.x + x, g.pos.y + y, g.pos.z + z);
 }
 
 void ViewPort::setPosition(int index, float x, float y, float z)
 {
-	auto& g = geometry[0];
+	auto& g = sceneMain.geometry[0];
 	g.pos = vector3(x, y, z);
 }
 
 void ViewPort::rotate(int index, float x, float y, float z)
 {
-	auto& g = geometry[index];
+	auto& g = sceneMain.geometry[index];
 	auto v = vector3(g.rot.x + x, g.rot.y + y, g.rot.z + z);
 	degToRad(v);
 	g.rot = v;
@@ -337,7 +429,7 @@ void ViewPort::rotate(int index, float x, float y, float z)
 
 void ViewPort::setRotation(int index, float x, float y, float z)
 {
-	auto& g = geometry[index];
+	auto& g = sceneMain.geometry[index];
 	auto v = vector3(x, y, z);
 		degToRad(v); 
 	g.rot =v;

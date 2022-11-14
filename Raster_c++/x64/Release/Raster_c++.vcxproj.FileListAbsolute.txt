@@ -5,3 +5,4 @@ C:\Users\ocjla\source\repos\Raster_cpp\Raster_c++\x64\Release\Raster_c++.vcxproj
 C:\Users\ocjla\source\repos\Raster_cpp\Raster_c++\x64\Release\Raster_c++.vcxproj.cppwinrt_plat.cache
 C:\Users\ocjla\source\repos\Raster_cpp\Raster_c++\x64\Release\Raster_c++.vcxproj.cppwinrt_comp.cache
 C:\Users\ocjla\source\repos\Raster_cpp\x64\Release\assimp-vc142-mt.dll
+C:\Users\ocjla\source\repos\Raster_c++\x64\Release\assimp-vc142-mt.dll

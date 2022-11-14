@@ -74,7 +74,7 @@ int Game::Update(float deltaTime)
 	//vp.setRotation(1,gameCamRot.x * 4.0f,gameCamRot.y * 4.0f,gameCamRot.z * 4.0f);
 //	vp.setLightPos(4, gameCamPos.x, gameCamPos.y, gameCamPos.z);
 	
-	//std::cout << fps << "\n";
+	std::cout << fps << "\n";
 	//std::cout << gameCamPos.x << "f , " << gameCamPos.y << "f , " << gameCamPos.z << "f\n"; // I USE THIS TO PLACE LIGHTS AND GET LOCATION
 	return renderPass(); //returns -1 on quit
 }

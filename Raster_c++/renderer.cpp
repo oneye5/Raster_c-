@@ -36,8 +36,12 @@ void ViewPort::InitViewPort(int ScreenWidth, int ScreenHeight)
 
 void ViewPort::InitGeometry()
 {
-	
-
+	sceneMain = sceneDesc();
+	Mesh mesh = Mesh();
+	mesh.loadFromObj("test.obj");
+	sceneMain.geometry.push_back(mesh);
+	sceneMain.geometry[0].init(0);
+	std::cout <<"parent mesh " << sceneMain.geometry[0].triangles[0].parentMesh<<" ";
 	//init lights --
 
 	dirLight = directionLight();
@@ -91,7 +95,7 @@ void ViewPort::InitGeometry()
 
 std::vector<std::future<void>> futures;
 static std::mutex mutex;
-const int calcBatchCount = 8;
+const int BatchCount = 8;
 
 /*
 	AVE FPS PER BATCH NUM
@@ -110,17 +114,71 @@ const int calcBatchCount = 8;
 
 */
 
-void calculateTriBatch(vector<Triangle>* tris, vector<Triangle>* toRender, Matrix4x4 transform, Matrix4x4 viewMat, int from,int to)
+void initMats(Matrix4x4& viewMat, Matrix4x4& transform, Mesh& obj)
 {
-	for (int i = from; i < to;i++)
+	Matrix4x4 matrixRotZ, matrixRotX;
+	matrixRotZ = getRotMatZ(obj.rot.z);
+	matrixRotX = getRotMatX(obj.rot.x);
+
+	transform = matrixRotZ * matrixRotX;
+	transform = transform * getTranslationMat(obj.pos);
+
+	vector3 camUp = vector3(0.0f, 1.0f, 0.0f);
+	vector3 camTarget = vector3(0, 0, 1);
+	Matrix4x4 camMatRotY = getRotMatY(camRot.y);
+	Matrix4x4 camMatRotX = getRotMatZ((-camRot.x + degToRad(90.0f)));
+
+
+
+	auto lookDir = multiplyMatrixVector(camMatRotX, camUp);
+	lookDir.y = lookDir.y;
+	lookDir.x = 0.0f;
+	lookDir.z = 0.0f;
+	lookDir = lookDir + multiplyMatrixVector(camMatRotY, camTarget);
+	lookDir.x = lookDir.x / (1.0f + abs(lookDir.y));
+	lookDir.z = lookDir.z / (1.0f + abs(lookDir.y));
+
+
+	camTarget = camPos + lookDir;
+
+
+	viewMat = matPointAt(camPos, camTarget, camUp);
+	viewMat = matInverse(viewMat);
+#pragma endregion
+}
+
+vector<Triangle> toRender;
+
+void calculateBatch(vector<Triangle> tris, int from,int to,vector<Triangle>* toRender)
+{
+	Matrix4x4 viewMat, transform;
+	int currentMesh = -1;
+
+
+	//std::cout <<"\n" << tris.size() << " end size from to = " << from << " " << to << "\n";
+
+	for (int i = from; i < to; i++)
 	{
-		auto& tri = tris->at(i);
+		auto& tri = tris[i];
 
-		Triangle triProjected;
 
+		if (tri.parentMesh != currentMesh) //if incorect matrix generate new
+		{
+			currentMesh = tri.parentMesh;
+			initMats(viewMat, transform, sceneMain.geometry[0]);
+
+		}
+
+				//start
+
+
+#pragma region projection
+		Triangle triProjected = Triangle();
+
+		triProjected.verticies[0] = multiplyMatrixVector(transform, tri.verticies[0]);
 		triProjected.verticies[1] = multiplyMatrixVector(transform, tri.verticies[1]);
 		triProjected.verticies[2] = multiplyMatrixVector(transform, tri.verticies[2]);
-		triProjected.verticies[0] = multiplyMatrixVector(transform, tri.verticies[0]);
+		
 		//============================================= calc normals =======================================
 
 
@@ -132,7 +190,7 @@ void calculateTriBatch(vector<Triangle>* tris, vector<Triangle>* toRender, Matri
 		float dotProd = toDotProduct(norm, vector3(triProjected.verticies[0]), camPos);
 		//exclude obscured
 
-		if (dotProd < 0.0f)
+		if (dotProd <= 0.0f)
 		{
 
 			//============================================== Lighting ==============================================================================================
@@ -140,6 +198,7 @@ void calculateTriBatch(vector<Triangle>* tris, vector<Triangle>* toRender, Matri
 			//direction lighting
 			triColInfo colinfo = triColInfo();
 			vector<Color>  colors;
+
 			vector3 direction = dirLight.dir;
 			toNormalized(direction);
 			float dotPod = toDotProduct(direction, norm);
@@ -149,7 +208,7 @@ void calculateTriBatch(vector<Triangle>* tris, vector<Triangle>* toRender, Matri
 			float r = dirLight.color.r; r = r / 255.0f; r *= brightness; r = clamp(r, 0, 255, true);
 			float g = dirLight.color.g; g = g / 255.0f; g *= brightness; g = clamp(g, 0, 255, true);
 			float b = dirLight.color.b; b = b / 255.0f; b *= brightness; b = clamp(b, 0, 255, true);
-			
+
 			colors.push_back(Color(r, g, b)); colors.push_back(Color(r, g, b)); colors.push_back(Color(r, g, b));
 
 			for (int i = 0; i < 3; i++) //per vert lighting
@@ -169,7 +228,7 @@ void calculateTriBatch(vector<Triangle>* tris, vector<Triangle>* toRender, Matri
 					brightness = dotPod * x.lumens;
 					brightness *= (x.range / (dist + 1)) / x.range;
 
-					r = x.color.r; r = r / 255.0f;r *= brightness;	r = clamp(r, 0, 255, true);
+					r = x.color.r; r = r / 255.0f; r *= brightness;	r = clamp(r, 0, 255, true);
 					g = x.color.g; g = g / 255.0f; g *= brightness; g = clamp(g, 0, 255, true);
 					b = x.color.b; b = b / 255.0f; b *= brightness; b = clamp(b, 0, 255, true);
 
@@ -188,73 +247,6 @@ void calculateTriBatch(vector<Triangle>* tris, vector<Triangle>* toRender, Matri
 			colinfo.al_col.push_back(al_map_rgb(colors[0].r, colors[0].g, colors[0].b));
 			colinfo.al_col.push_back(al_map_rgb(colors[1].r, colors[1].g, colors[1].b));
 			colinfo.al_col.push_back(al_map_rgb(colors[2].r, colors[2].g, colors[2].b));
-				//dir light
-			/*
-			
-			vector<Color> lightCols;
-
-			vector3 direction = dirLight.dir;
-			toNormalized(direction);
-
-			float dotPod = toDotProduct(direction, norm);
-
-			float brightness = dotPod * dirLight.lumens;
-			brightness += dirLight.ambientMulti * dirLight.lumens;
-			triColInfo colinfo = triColInfo();
-
-			float r = clamp((float)dirLight.color.r / 255.0f, 0, 1.0f, false);
-			float g = clamp((float)dirLight.color.g / 255.0f, 0, 1.0f, false);
-			float b = clamp((float)dirLight.color.b / 255.0f, 0, 1.0f, false);
-
-			lightCols.push_back(Color(clamp(r * brightness, 0, 255, true), clamp(g * brightness, 0, 255, true), clamp(b * brightness, 0, 255, true)));
-
-			vector3 planeCenter;
-			planeCenter = averagePos(triProjected);
-
-			//point lights
-			for (auto& x : pointLights)
-			{
-				float brightness2 = 0.0f;
-				//add check for LOS to plane
-				// add check for dot product
-				float dist = getDistance(x.pos, planeCenter);
-
-				if (getDistance(x.pos, planeCenter) > x.range)
-					continue;
-
-				vector3 angle = planeCenter - x.pos;
-				toNormalized(angle);
-				dotPod = abs(toDotProduct(angle, norm));
-
-				brightness2 = dotPod * x.lumens;
-				brightness2 *= (x.range / (dist + 1)) / x.range;
-
-
-				float r = clamp((float)x.color.r / 255.0f, 0, 1.0f, false);
-				float g = clamp((float)x.color.g / 255.0f, 0, 1.0f, false);
-				float b = clamp((float)x.color.b / 255.0f, 0, 1.0f, false);
-
-				lightCols.push_back(Color(clamp(r * brightness2, 0, 255, true), clamp(g * brightness2, 0, 255, true), clamp(b * brightness2, 0, 255, true)));
-			}
-
-			//add all together
-
-			float rOut = 0.0f;
-			float gOut = 0.0f;
-			float bOut = 0.0f;
-			for (auto& x : lightCols)
-			{
-				rOut += x.r;
-				gOut += x.g;
-				bOut += x.b;
-			}
-			rOut = clamp(rOut, 0, 255, true);
-			gOut = clamp(gOut, 0, 255, true);
-			bOut = clamp(bOut, 0, 255, true);
-
-
-			colinfo.al_col = al_map_rgb(rOut, gOut, bOut);
-			*/
 #pragma endregion
 			//============================================== wolrd to view space && Clipping ===========================
 			triProjected.verticies[0] = multiplyMatrixVector(viewMat, triProjected.verticies[0]);
@@ -276,73 +268,48 @@ void calculateTriBatch(vector<Triangle>* tris, vector<Triangle>* toRender, Matri
 				triProjected.verticies[1] = triProjected.verticies[1] / triProjected.verticies[1].w;
 				triProjected.verticies[2] = triProjected.verticies[2] / triProjected.verticies[2].w;
 
-				triProjected.colInfo = colinfo;
-
 				normToScreen(screenWidth, screenHeight, triProjected);
 				triProjected.zAve = averagePos(triProjected).z;
-
+				triProjected.parentMesh = tri.parentMesh;
+				triProjected.colInfo = colinfo;
+#pragma endregion
+				//end
 				std::lock_guard<std::mutex> lock(mutex);
 				toRender->push_back(triProjected);
 			}
-			
 		}
+	}
+}
+void batchAlloc()
+{
+	vector<Triangle> allTris;
+	for (auto m : sceneMain.geometry)
+	{
+		allTris.insert(allTris.end(), m.triangles.begin(), m.triangles.end());
+	}
+	//tris per batch
+	int trisPerBatch = roundf( (float)allTris.size() / (float)BatchCount) + 1;
+	int from = 0;
+	int to = 0;
+
+	for (int batch = 0; batch < BatchCount; batch++)
+	{
+		to = (batch + 1) * trisPerBatch;
+		if (to > allTris.size())
+			to = allTris.size();
+
+
+		futures.push_back(
+			std::async(std::launch::async, calculateBatch,
+				allTris,from,to,&toRender)
+		);
+		from = to;
 	}
 }
 void ViewPort::render()
 {
-	vector<Triangle> toRender;
-	for (auto& obj : sceneMain.geometry)
-	{
-		//================================================= rotate & translate =====================================
-#pragma region setupVars
-		Matrix4x4 matrixRotZ, matrixRotX;
-		matrixRotZ = getRotMatZ(obj.rot.z);
-		matrixRotX = getRotMatX(obj.rot.x);
+	batchAlloc();
 
-			Matrix4x4 transform = matrixRotZ * matrixRotX;
-			transform = transform * getTranslationMat(obj.pos);
-
-			vector3 camUp = vector3(0.0f, 1.0f, 0.0f);
-			vector3 camTarget = vector3(0,0,1);
-			Matrix4x4 camMatRotY = getRotMatY(camRot.y);
-			Matrix4x4 camMatRotX = getRotMatZ((-camRot.x + degToRad(90.0f)) );
-
-			
-
-			auto lookDir =  multiplyMatrixVector(camMatRotX, camUp);
-			lookDir.y = lookDir.y;
-			lookDir.x = 0.0f;
-			lookDir.z = 0.0f;
-			lookDir = lookDir + multiplyMatrixVector(camMatRotY,camTarget);
-			lookDir.x = lookDir.x / (1.0f + abs(lookDir.y));
-			lookDir.z = lookDir.z / (1.0f + abs(lookDir.y));
-
-
-			camTarget = camPos + lookDir;
-			
-
-			Matrix4x4 camMat = matPointAt(camPos, camTarget, camUp);
-			
-			Matrix4x4 viewMat = matInverse(camMat);
-#pragma endregion
-
-			bool init = false;
-			int currentStart = 0;
-			for (int i = 0; i < calcBatchCount; i++)
-			{
-				int currentEnd = roundf((float)obj.triangles.size() / (float)calcBatchCount);
-				currentEnd += currentStart + 1;
-				currentEnd = clamp(currentEnd, 0.0f, obj.triangles.size(), true);
-
-				futures.push_back(
-					std::async(std::launch::async, calculateTriBatch, &obj.triangles, &toRender, transform, viewMat, currentStart, currentEnd)
-				);
-
-
-				currentStart = currentEnd;
-			}
-		
-	}
 	for (int i = 0; i < futures.size(); i++) //wait for threads
 	{
 		futures[i].wait();
@@ -382,28 +349,12 @@ void ViewPort::render()
 		 vtx[2].v = 100;
 
 		 
-
-		al_draw_prim(vtx, NULL,NULL, 0, 3, ALLEGRO_PRIM_TRIANGLE_FAN);
-		/*
-		al_draw_filled_triangle(
-		t.verticies[0].x,
-		t.verticies[0].y,
-
-		t.verticies[1].x,
-		t.verticies[1].y,
-
-		t.verticies[2].x,
-		t.verticies[2].y,
-
-		t.colInfo.al_col
-		);
-		*/
-
-
-		//al_draw_triangle(	t.verticies[0].x,t.verticies[0].y,t.verticies[1].x,	t.verticies[1].y,t.verticies[2].x,t.verticies[2].y,t.colInfo.al_col,1.0f);
+		 
+		al_draw_prim(vtx, NULL,sceneMain.geometry[t.parentMesh].texture.tex, 0, 3, ALLEGRO_PRIM_TRIANGLE_FAN);
 	}
 	
 	al_flip_display();
+	toRender.clear();
 }
 
 #pragma region game renderer interaction

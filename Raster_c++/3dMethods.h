@@ -17,7 +17,7 @@
 
 #pragma warning(disable : 4996)
 using std::vector;
-
+const std::string modelDir = "models/";
 
 struct vector4
 {
@@ -215,11 +215,10 @@ struct triColInfo
 struct Triangle
 {
 	vector< vector4> verticies;
-	vector3 normal;
-	float u;
-	float v;
+	float u = 0.0f;
+	float v = 0.0f;
 	triColInfo colInfo;
-	unsigned int meshIndex;
+	int parentMesh;
 
 	//vector<vector2> textureCoords = vector<vector2>{vector2(),vector2() ,vector2() };
 	float zAve;//average vert depth
@@ -233,7 +232,7 @@ struct Triangle
 	}
 	Triangle()
 	{
-		verticies = vector<vector4>{ vector4(0,0,0), vector4(0,0,0),vector4(0,0,0) };
+		verticies = vector<vector4>{ vector4(0,0,0,1), vector4(0,0,0,1),vector4(0,0,0,1) };
 	}
 	Triangle(vector4 v1, vector4 v2, vector4 v3)
 	{
@@ -256,10 +255,13 @@ struct Mesh
 	}
 	bool loadFromObj(std::string dir)
 	{
+		dir = modelDir + dir;
 		std::ifstream f(dir);
 		if (!f.is_open())
+		{
+			std::cout << "failed to load " << dir<<"\n";
 			return false;
-
+		}
 		vector<vector4> verticies;
 		while (!f.eof())
 		{
@@ -288,28 +290,53 @@ struct Mesh
 				);
 			
 			}
-
-		//	std::cout << "loading line "<<verticies.size()<< "\n";
 		}
-		return true;
+
+		std::string matDir;
+		//generate mat dir string
+		for (int i = 0; i < dir.size(); i++)
+		{
+			if (dir[i] == '.')
+				break;
+			matDir = matDir + dir[i];
+		}
+
+		matDir =  matDir + ".mtl";
+
+		bool success = loadTexture(matDir);
+		return success;
 	}
 	bool loadTexture(std::string dir)
 	{
-		std::ifstream f(dir);
-		if (!f.is_open())
-			return false;
-		size_t size = f.tellg();
-		std::string buffer(size, ' ');
-		f.seekg(0);
-		f.read(&buffer[0], size);
+		std::ifstream file(dir);
 
-		string lookFor = "map_Kd";
-		if (!buffer.find(lookFor)) //if contains texture
+		if (!file.is_open())
+		{
+			std::cout << "failed loading " << dir;
 			return false;
+		}
+
+		std::string buffer;
+		//put file into string
+
+		while (file) //while valid
+		{
+			std::string line;
+			std::getline(file, line);
+			buffer = buffer + line + "\n";
+		}
+		std::string lookFor = "map_Kd";
+		if (!buffer.find(lookFor)) //if contains texture
+		{
+			std::cout << dir << " does not contain a texture";
+			return false;
+		}
+
+	
 
 		auto at = buffer.find(lookFor);
-		int startIndex = at + lookFor.size();
-		auto toCheck = buffer.substr(startIndex, buffer.size());
+		int startIndex = at; //+ lookFor.size();
+		auto toCheck = buffer.substr(startIndex, buffer.size()-1);
 		std::string out;
 		for (auto x : toCheck)
 		{
@@ -319,17 +346,44 @@ struct Mesh
 			}
 		}
 
+		//out = modelDir + out;
+		//replace pathh with just models/name
+		std::string prefixToRemove = "map_KdC:/";
+		out = "C:" + out.substr(prefixToRemove.size(), out.size() - 1);
+		int lookForSize = ("/" + modelDir).size();
+		for (int i = out.size(); i != 0; i--)
+		{
+			if (out[i] == '/')
+			{
+				out = out.substr(i+1, out.size());
+				out = out.substr(0, (out.size() - 2));
+				out = modelDir + out;
+				break;
+			}
+		}
+	
 		auto* textr = al_load_bitmap(out.c_str());
+		//auto* textr = al_load_bitmap("models/woodTexture.jpg");
 		if (textr == nullptr)
+		{
+			std::cout << out << " failed to load bitmap";
 			return false;
+		}
 		else
 		{
 			texture = Texture();
 			texture.tex = textr;
 			texture.path = out;
 		}
+		return true;
 	}
-	
+	void init(int index)
+	{
+		for (auto& tri : triangles)
+		{
+			tri.parentMesh = index;
+		}
+	}
 	Mesh() {};
 };
 struct Matrix4x4

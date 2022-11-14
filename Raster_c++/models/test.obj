@@ -1,7 +1,7 @@
 # Blender 3.3.0
 # www.blender.org
 mtllib test.mtl
-g Cube_Mesh
+o Cube
 v 1.000000 1.000000 -1.000000
 v 1.000000 -1.000000 -1.000000
 v 1.000000 1.000000 1.000000

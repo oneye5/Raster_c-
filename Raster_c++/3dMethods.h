@@ -215,8 +215,7 @@ struct triColInfo
 struct Triangle
 {
 	vector< vector4> verticies;
-	float u = 0.0f;
-	float v = 0.0f;
+	vector<vector2> uvs;
 	triColInfo colInfo;
 	int parentMesh;
 
@@ -233,6 +232,7 @@ struct Triangle
 	Triangle()
 	{
 		verticies = vector<vector4>{ vector4(0,0,0,1), vector4(0,0,0,1),vector4(0,0,0,1) };
+		uvs = vector<vector2>{vector2(0,0),vector2(0,0), vector2(0,0)};
 	}
 	Triangle(vector4 v1, vector4 v2, vector4 v3)
 	{
@@ -263,6 +263,7 @@ struct Mesh
 			return false;
 		}
 		vector<vector4> verticies;
+		vector<vector2> uvs;
 		while (!f.eof())
 		{
 			char line[10000];
@@ -302,6 +303,174 @@ struct Mesh
 		}
 
 		matDir =  matDir + ".mtl";
+
+		bool success = loadTexture(matDir);
+		return success;
+	}
+	bool loadFromFile(std::string dir)
+	{
+		dir = modelDir + dir;
+		std::ifstream file(dir);
+		vector<vector4> verticies;
+		vector<vector2> uvs;
+
+		if (!file.is_open())
+		{
+			std::cout << "failed loading " << dir;
+			return false;
+		}
+		while (file) //while valid
+		{
+			std::string line;
+			std::getline(file, line);
+			
+			std::string prefix = line.substr(0, 2);
+
+			//C++ DOES NOT SUPPORT STRINGS IN SWITCH STATEMENTS >:(((((((((
+			if (prefix == "v ")
+			{
+				vector<float> args;
+				vector4 v = vector4();
+				std::string arg;
+				int endArg = 2;
+				argStart1:
+				for (int i = endArg; i < line.size(); i++)
+				{
+					if (line[i] == ' ')
+					{
+						endArg = i;
+						endArg++;
+						break;
+					}
+					arg.push_back(line[i]);
+				}
+				args.push_back( std::stof(arg) );
+				if(args.size() != 3)
+				{
+					arg = "";
+					goto argStart1;
+				}
+				v.x = args[0];
+				v.y = args[1];
+				v.z = args[2];
+				v.w = 1.0f;
+
+				verticies.push_back(v);
+			}
+			else if(prefix == "vt")
+			{
+				vector<float> args;
+				vector2 v = vector2();
+				std::string arg;
+				int endArg = 3;
+			argStart2:
+				for (int i = endArg; i < line.size(); i++)
+				{
+					if (line[i] == ' ')
+					{
+						endArg = i;
+						endArg++;
+						break;
+					}
+					arg.push_back(line[i]);
+				}
+				args.push_back(std::stof(arg));
+				if (args.size() != 2)
+				{
+					arg = "";
+					goto argStart2;
+				}
+				v.x = args[0];
+				v.y = args[1];
+
+				uvs.push_back(v);
+			}
+			else if (prefix == "f ")
+			{
+				vector<std::string> args;
+				vector<int> argsV;
+				vector<int> argsU;
+
+				std::string arg;
+				int endArg = 2;
+			argStart3:
+				for (int i = endArg; i < line.size(); i++)
+				{
+					if (line[i] == ' ')
+					{
+						endArg = i;
+						endArg++;
+						break;
+					}
+					arg.push_back(line[i]);
+				}
+				args.push_back(arg);
+				if (args.size() != 3)
+				{
+					arg = "";
+					goto argStart3;
+				}
+
+
+
+				vector<int> vertI;
+				vector<int> uvI;
+				//seperate args with "/"
+				bool isUv = false;
+				for (std::string x : args)
+				{
+					isUv = false;
+					std::string arg1;
+					std::string arg2;
+					for (auto y : x) // iterate through argument
+					{
+						if (y == '/')
+						{
+							isUv = true;
+							continue;
+						}
+						if (!isUv)
+						{
+							arg1.push_back(y);
+						}
+						else
+						{
+							arg2.push_back(y);
+						}
+					}
+
+
+					//process seperated 
+					vertI.push_back(std::stoi(arg1));
+					uvI.push_back(std::stoi(arg2));
+				}
+
+
+				//construct triangle
+				Triangle tri = Triangle();
+				tri.verticies[0] = verticies[vertI[0]-1];
+				tri.verticies[1] = verticies[vertI[1]-1];
+				tri.verticies[2] = verticies[vertI[2]-1];
+
+				tri.uvs[0] = uvs[uvI[0]-1];
+				tri.uvs[1] = uvs[uvI[1]-1];
+				tri.uvs[2] = uvs[uvI[2]-1];
+
+				triangles.push_back(tri);
+			}
+		}
+
+
+		std::string matDir;
+		//generate mat dir string
+		for (int i = 0; i < dir.size(); i++)
+		{
+			if (dir[i] == '.')
+				break;
+			matDir = matDir + dir[i];
+		}
+
+		matDir = matDir + ".mtl";
 
 		bool success = loadTexture(matDir);
 		return success;
@@ -984,6 +1153,22 @@ float getDistance(vector3 v1, vector3 v2)
 {
 	auto out =	v1 - v2;
 	return	magnitude(out);
+}
+void unNormalizeUvs(Triangle& tri,Texture t)
+{
+	for (auto& x : tri.uvs)
+	{
+		float u = x.x;
+		float v = x.y;
+
+		int w = al_get_bitmap_width(t.tex);
+		int h = al_get_bitmap_height(t.tex);
+
+		normToScreen(w, h, u, v);
+
+		x.x = u;
+		x.y = v;
+	}
 }
 
 struct sceneDesc

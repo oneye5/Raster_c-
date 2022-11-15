@@ -38,10 +38,11 @@ void ViewPort::InitGeometry()
 {
 	sceneMain = sceneDesc();
 	Mesh mesh = Mesh();
-	mesh.loadFromObj("test.obj");
+//	mesh.loadFromObj("test.obj");
+	mesh.loadFromFile("test.obj");
 	sceneMain.geometry.push_back(mesh);
 	sceneMain.geometry[0].init(0);
-	std::cout <<"parent mesh " << sceneMain.geometry[0].triangles[0].parentMesh<<" ";
+//	std::cout <<"parent mesh " << sceneMain.geometry[0].triangles[0].parentMesh<<" ";
 	//init lights --
 
 	dirLight = directionLight();
@@ -272,6 +273,9 @@ void calculateBatch(vector<Triangle> tris, int from,int to,vector<Triangle>* toR
 				triProjected.zAve = averagePos(triProjected).z;
 				triProjected.parentMesh = tri.parentMesh;
 				triProjected.colInfo = colinfo;
+				triProjected.uvs = tri.uvs;
+
+				unNormalizeUvs(triProjected, sceneMain.geometry[triProjected.parentMesh].texture);
 #pragma endregion
 				//end
 				std::lock_guard<std::mutex> lock(mutex);
@@ -331,26 +335,26 @@ void ViewPort::render()
 		 vtx[0].y = t.verticies[0].y;
 		 vtx[0].z = 0;
 		 vtx[0].color = t.colInfo.al_col[0];
-		 vtx[0].u = 1;
-		 vtx[0].v = 1;
+		 vtx[0].u = t.uvs[0].x;
+		 vtx[0].v = t.uvs[0].y;
 
 		  vtx[1].x = t.verticies[1].x;
 		 vtx[1].y = t.verticies[1].y;
 		 vtx[1].z = -0;
 		 vtx[1].color = t.colInfo.al_col[1];
-		 vtx[1].u = 100;
-		 vtx[1].v = 100;
+		 vtx[1].u = t.uvs[1].x;
+		 vtx[1].v = t.uvs[1].y;
 
 		 vtx[2].x = t.verticies[2].x;
 		 vtx[2].y = t.verticies[2].y;
 		 vtx[2].z = -0;
 		 vtx[2].color = t.colInfo.al_col[2];
-		 vtx[2].u = 100;
-		 vtx[2].v = 100;
+		 vtx[2].u =t.uvs[2].x;
+		 vtx[2].v =t.uvs[2].y;
 
 		 
-		 
-		al_draw_prim(vtx, NULL,sceneMain.geometry[t.parentMesh].texture.tex, 0, 3, ALLEGRO_PRIM_TRIANGLE_FAN);
+	//	 sceneMain.geometry[t.parentMesh].texture.tex;
+		al_draw_prim(vtx, NULL, sceneMain.geometry[t.parentMesh].texture.tex, 0, 3, ALLEGRO_PRIM_TRIANGLE_FAN);
 	}
 	
 	al_flip_display();

@@ -2,5 +2,5 @@
 C:\Users\ocjla\source\repos\Raster_c++\Raster_c++\3dMethods.h(507,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\ocjla\source\repos\Raster_c++\Raster_c++\3dMethods.h(522,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\ocjla\source\repos\Raster_c++\Raster_c++\3dMethods.h(523,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\ocjla\source\repos\Raster_c++\Raster_c++\renderer.cpp(303,23): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\ocjla\source\repos\Raster_c++\Raster_c++\renderer.cpp(304,23): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
   Raster_c++.vcxproj -> C:\Users\ocjla\source\repos\Raster_c++\x64\Debug\Raster_c++.exe

@@ -39,9 +39,28 @@ void ViewPort::InitGeometry()
 	sceneMain = sceneDesc();
 	Mesh mesh = Mesh();
 //	mesh.loadFromObj("test.obj");
-	mesh.loadFromFile("test.obj");
+	mesh.loadFromFile("worldP1.obj");
 	sceneMain.geometry.push_back(mesh);
 	sceneMain.geometry[0].init(0);
+	sceneMain.geometry[0].rot = vector3(degToRad(90), degToRad(0), degToRad(0));
+
+	mesh = Mesh();
+	mesh.loadFromFile("worldP2.obj");
+	sceneMain.geometry.push_back(mesh);
+	sceneMain.geometry[1].init(1);
+	sceneMain.geometry[1].rot = vector3(degToRad(90), degToRad(0), degToRad(0));
+
+	mesh = Mesh();
+	mesh.loadFromFile("worldP3.obj");
+	sceneMain.geometry.push_back(mesh);
+	sceneMain.geometry[2].init(2);
+	sceneMain.geometry[2].rot = vector3(degToRad(90), degToRad(0), degToRad(0));
+
+	mesh = Mesh();
+	mesh.loadFromFile("worldP4.obj");
+	sceneMain.geometry.push_back(mesh);
+	sceneMain.geometry[3].init(3);
+	sceneMain.geometry[3].rot = vector3(degToRad(90), degToRad(0), degToRad(0));
 //	std::cout <<"parent mesh " << sceneMain.geometry[0].triangles[0].parentMesh<<" ";
 	//init lights --
 
@@ -162,7 +181,6 @@ void calculateBatch(vector<Triangle> tris, int from,int to,vector<Triangle>* toR
 	{
 		auto& tri = tris[i];
 
-
 		if (tri.parentMesh != currentMesh) //if incorect matrix generate new
 		{
 			currentMesh = tri.parentMesh;
@@ -275,6 +293,7 @@ void calculateBatch(vector<Triangle> tris, int from,int to,vector<Triangle>* toR
 				triProjected.colInfo = colinfo;
 				triProjected.uvs = tri.uvs;
 
+				if(sceneMain.geometry[triProjected.parentMesh].texture.tex != nullptr)
 				unNormalizeUvs(triProjected, sceneMain.geometry[triProjected.parentMesh].texture);
 #pragma endregion
 				//end
@@ -354,6 +373,9 @@ void ViewPort::render()
 
 		 
 	//	 sceneMain.geometry[t.parentMesh].texture.tex;
+		 if(sceneMain.geometry[t.parentMesh].texture.tex == nullptr)
+			 al_draw_prim(vtx, NULL, NULL, 0, 3, ALLEGRO_PRIM_TRIANGLE_FAN);
+		 else
 		al_draw_prim(vtx, NULL, sceneMain.geometry[t.parentMesh].texture.tex, 0, 3, ALLEGRO_PRIM_TRIANGLE_FAN);
 	}
 	

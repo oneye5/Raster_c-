@@ -442,6 +442,7 @@ struct Mesh
 
 					//process seperated 
 					vertI.push_back(std::stoi(arg1));
+					if (arg2.size() > 0)
 					uvI.push_back(std::stoi(arg2));
 				}
 
@@ -452,10 +453,18 @@ struct Mesh
 				tri.verticies[1] = verticies[vertI[1]-1];
 				tri.verticies[2] = verticies[vertI[2]-1];
 
-				tri.uvs[0] = uvs[uvI[0]-1];
-				tri.uvs[1] = uvs[uvI[1]-1];
-				tri.uvs[2] = uvs[uvI[2]-1];
-
+				if (uvs.size() > 0)
+				{
+					tri.uvs[0] = uvs[uvI[0] - 1];
+					tri.uvs[1] = uvs[uvI[1] - 1];
+					tri.uvs[2] = uvs[uvI[2] - 1];
+				}
+				else
+				{
+					tri.uvs[0] = vector2(0.0f, 0.0f);
+					tri.uvs[1] = vector2(0.0f, 0.0f);
+					tri.uvs[2] = vector2(0.0f, 0.0f);
+				}
 				triangles.push_back(tri);
 			}
 		}

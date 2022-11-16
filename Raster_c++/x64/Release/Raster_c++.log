@@ -1,8 +1,7 @@
-﻿  renderer.cpp
-C:\Users\ocjla\source\repos\Raster_c++\Raster_c++\3dMethods.h(336,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+﻿  Game.cpp
   Generating code
-  4 of 1593 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+  20 of 1802 functions ( 1.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    2 functions had inline decision re-evaluated but remain unchanged
+    3 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Raster_c++.vcxproj -> C:\Users\ocjla\source\repos\Raster_c++\x64\Release\Raster_c++.exe

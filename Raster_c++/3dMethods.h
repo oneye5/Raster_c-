@@ -840,17 +840,16 @@ float dist(vector4& p, vector3 plane_n,vector3 plane_p)
 	toNormalized(n);
 	return (plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - toDotProduct(plane_n, plane_p));
 }
-int TriClipFromPlane(vector3 plane_p, vector3 plane_n, Triangle& in_tri, Triangle& out_tri1, Triangle& out_tri2)
+int TriClipFromPlane(vector3 plane_p, vector3 plane_n, Triangle& in_tri, Triangle& out_tri1, Triangle& out_tri2)  //uvs do not get changed propperly. I could fix this but i want to move onto other things
 {
 	toNormalized(plane_n);
-	// Create two temporary storage arrays to classify points either side of plane
-	// If distance sign is positive, point lies on "inside" of plane
+
 	vector4* inside_points[3];  int nInsidePointCount = 0;
 	vector4* outside_points[3]; int nOutsidePointCount = 0;
 
-	//vector4* inside_texture[3]; int insideTexCount = 0;
-//	vector4* outside_texture[3]; int outsideTexCount = 0;
-	// Get signed distance of each point in triangle to plane
+	vector2* inside_texture[3]; int insideTexCount = 0;
+	vector2* outside_texture[3]; int outsideTexCount = 0;
+	// Get distance of each point in triangle to plane
 	float d0 = dist(in_tri.verticies[0],plane_n,plane_p);
 	float d1 = dist(in_tri.verticies[1],plane_n,plane_p);
 	float d2 = dist(in_tri.verticies[2],plane_n,plane_p);
@@ -858,301 +857,108 @@ int TriClipFromPlane(vector3 plane_p, vector3 plane_n, Triangle& in_tri, Triangl
 	if (d0 >= 0) 
 	{
 		inside_points[nInsidePointCount] = &in_tri.verticies[0];
-	//	inside_texture[insideTexCount] = &in_tri.verticies[0];
-	//	insideTexCount++;
+		inside_texture[insideTexCount] = &in_tri.uvs[0];
+		insideTexCount++;
 		nInsidePointCount++;
 		
 	}
 	else 
 	{
 		outside_points[nOutsidePointCount] = &in_tri.verticies[0];
-	//	outside_texture[outsideTexCount] = &in_tri.verticies[0];
-	//	outsideTexCount++;
+		outside_texture[outsideTexCount] = &in_tri.uvs[0];
+		outsideTexCount++;
 		nOutsidePointCount++;
 	}
 
 	if (d1 >= 0)
 	{ 
 		inside_points[nInsidePointCount] = &in_tri.verticies[1];
-	//	inside_texture[insideTexCount] = &in_tri.verticies[1];
-	//	insideTexCount++;
+		inside_texture[insideTexCount] = &in_tri.uvs[1];
+		insideTexCount++;
 		nInsidePointCount++;
 	}
 	else 
 	{
 		outside_points[nOutsidePointCount] = &in_tri.verticies[1];
-	//	outside_texture[outsideTexCount] = &in_tri.verticies[1];
-	//	outsideTexCount++;
+		outside_texture[outsideTexCount] = &in_tri.uvs[1];
+		outsideTexCount++;
 		nOutsidePointCount++;
 	}
 
 	if (d2 >= 0)
 	{ 
 		inside_points[nInsidePointCount] = &in_tri.verticies[2];
-	//	inside_texture[insideTexCount] = &in_tri.verticies[2];
-	//	insideTexCount++;
+		inside_texture[insideTexCount] = &in_tri.uvs[2];
+		insideTexCount++;
 		nInsidePointCount++;
 	}
 	else 
 	{
 		outside_points[nOutsidePointCount] = &in_tri.verticies[2];
-	//	outside_texture[outsideTexCount] = &in_tri.verticies[2];
-	//	outsideTexCount++;
+		outside_texture[outsideTexCount] = &in_tri.uvs[2];
+		outsideTexCount++;
 		nOutsidePointCount++;
 	}
 
-	// Now classify triangle points, and break the input triangle into 
-	// smaller output triangles if required. There are four possible outcomes
-
 	if (nInsidePointCount == 0)
 	{
-		// All points lie on the outside of plane, so clip whole triangle
-		// It ceases to exist
-
-		return 0; // No returned triangles are valid
+		return 0; // no tris valid
 	}
 
 	if (nInsidePointCount == 3)
 	{
-		// All points lie on the inside of plane, so do nothing
-		// and allow the triangle to simply pass through
+		//tri valid. no clipping needed
 		out_tri1 = in_tri;
 
-		return 1; // Just the one returned original triangle is valid
+		return 1; 
 	}
 
 	if (nInsidePointCount == 1 && nOutsidePointCount == 2)
 	{
-		// Triangle should be clipped. As two points lie outside
-		// the plane, the triangle simply becomes a smaller triangle
-
-		// Copy appearance info to new triangle
 		out_tri1.colInfo = in_tri.colInfo;
-
-
-		// The inside point is valid, so keep that...
 		out_tri1.verticies[0] = *inside_points[0];
-	//	out_tri1.textureCoords[0] = vector2(* inside_texture[0]);
-		// but the two new points are at the locations where the 
-		// original sides of the triangle (lines) intersect with the plane
-	
+		out_tri1.uvs[0] = vector2(* inside_texture[0]); //---------------------------------------- #
 		float t;
 		auto temp1 = intersectPlane(plane_p, plane_n,  *inside_points[0], *outside_points[0],t) ;
-	//	out_tri1.textureCoords[1] = t * (outside_points[0]->x - inside_texture[0]->x  ) + inside_texture[0]->x;
-	//	out_tri1.textureCoords[1] = t * (outside_points[0]->y - inside_texture[0]->y  ) + inside_texture[0]->y;
+		out_tri1.uvs[1] = t * (outside_points[0]->x - inside_texture[0]->x  ) + inside_texture[0]->x; //------------------------------------ #
+		out_tri1.uvs[1] = t * (outside_points[0]->y - inside_texture[0]->y  ) + inside_texture[0]->y;
 
 		auto temp2 = intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[1],t);
-	//	out_tri1.textureCoords[2] = t * (outside_points[0]->x - inside_texture[0]->x) + inside_texture[0]->x;
-	//	out_tri1.textureCoords[2] = t * (outside_points[0]->y - inside_texture[0]->y) + inside_texture[0]->y;
+		out_tri1.uvs[2] = t * (outside_points[0]->x - inside_texture[0]->x) + inside_texture[0]->x; //---------------------------------- #
+		out_tri1.uvs[2] = t * (outside_points[0]->y - inside_texture[0]->y) + inside_texture[0]->y;
 
 		out_tri1.verticies[1] = vector4( temp1.x,temp1.y,temp1.z);
 		out_tri1.verticies[2] = vector4(temp2.x, temp2.y, temp2.z);
 
-		return 1; // Return the newly formed single triangle
+		return 1; 
 	}
 
 	if (nInsidePointCount == 2 && nOutsidePointCount == 1)
 	{
-		// Triangle should be clipped. As two points lie inside the plane,
-		// the clipped triangle becomes a "quad". Fortunately, we can
-		// represent a quad with two new triangles
-
-		// Copy appearance info to new triangles
+		//should be clipped
 		out_tri1.colInfo = in_tri.colInfo;
 		out_tri2.colInfo = in_tri.colInfo;
 
-		// The first triangle consists of the two inside points and a new
-		// point determined by the location where one side of the triangle
-		// intersects with the plane
 		out_tri1.verticies[0] = *inside_points[0];
 		out_tri1.verticies[1] = *inside_points[1];
-	//	out_tri1.textureCoords[0]  = vector2(*inside_texture[0]);
-	//	out_tri1.textureCoords[1] = vector2(*inside_texture[1]);
+		out_tri1.uvs[0]  = *inside_texture[0]; //--------------------------------------------------------- #
+		out_tri1.uvs[1] = *inside_texture[1];
 
 		float t;
 		 auto temp1 = intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[0],t);
 		 out_tri1.verticies[2] = vector4(temp1.x, temp1.y, temp1.z);
-		// The second triangle is composed of one of he inside points, a
-		// new point determined by the intersection of the other side of the 
-		// triangle and the plane, and the newly created point above
+
+
 		out_tri2.verticies[0] = *inside_points[1];
 		out_tri2.verticies[1] = out_tri1.verticies[2];
 
 
 		auto temp2 = intersectPlane(plane_p, plane_n, *inside_points[1], *outside_points[0],t);
 		out_tri2.verticies[2] = vector4(temp2.x,temp2.y,temp2.z);
-		return 2; // Return two newly formed triangles which form a quad
+		return 2; //two tris forming a quad
 	}
 	return 1;
 }
-Color sampleTexture(vector2 v, ALLEGRO_BITMAP* t)
-{
-	int w=	al_get_bitmap_width(t);
-	int h = al_get_bitmap_height(t);
-
-	normToScreen(w, h, v.x, v.y);
-	int x = v.x;
-	int y = v.y;
-
-	return	al_get_pixel(t, x, y);
-}
-void textureTri(int x1, int y1, float u1, float v1,int x2, int y2, float u2, float v2,int x3, int y3, float u3, float v3,ALLEGRO_BITMAP* texture)
-{
-	if (y2 < y1)
-	{
-		std::swap(y1, y2);
-		std::swap(x1, x2);
-		std::swap(u1, u2);
-		std::swap(v1, v2);
-	}
-	if (y3 < y1)
-	{
-		std::swap(y1, y3);
-		std::swap(x1, x3);
-		std::swap(u1, u3);
-		std::swap(v1, v3);
-	}
-	if (y3 < y2)
-	{
-		std::swap(y2, y3);
-		std::swap(x2, x3);
-		std::swap(u2, u3);
-		std::swap(v2, v3);
-	}
-
-	int dy1 = y2 - y1;
-	int dx1 = x2 - x1;
-	float dv1 = v2 - v1;
-	float du1 = u2 - u1;
-
-	int dy2 = y3 - y1;
-	int dx2 = x3 - x1;
-	float dv2 = v3 - v1;
-	float du2 = u3 - u1;
-
-	float texU, texV;
-
-	float daxStep = 0.0f;
-	float dbxStep = 0.0f;
-	float du1Step = 0.0f;
-	float dv1Step = 0.0f;
-	float du2Step = 0.0f;
-	float dv2Step = 0.0f;
-
-	if (dy1) daxStep = dx1 / (float)abs(dy1);
-	if (dy2) dbxStep = dx2 / (float)abs(dy2);
-
-
-	if (dy1) du1Step = du1 / (float)abs(dy1);
-	if (dy1) dv1Step = dx1 / (float)abs(dy1);
-
-	if (dy2) du2Step = du2 / (float)abs(dy2);
-	if (dy2) dv2Step = dx2 / (float)abs(dy2);
-
-	if (dy1)
-	{
-		for (int y = y1; y <= y2; y++)
-		{
-			int ax = x1 + (float)(y - y1) * daxStep;
-			int bx = x1 + (float)(y - y1) * dbxStep;
-
-			float texSu = u1 + (float)(y - y1) * du1Step; //starting values
-			float texSv = v1 + (float)(y - y1) * dv1Step;
-
-			float texEu = u1 + (float)(y - y1) * du2Step;
-			float texEv = v1 + (float)(y - y1) * du2Step;//ending values
-
-			if (ax > bx)
-			{
-				std::swap(ax, bx);
-				std::swap(texSu, texEu);
-				std::swap(texSv, texEv);
-			}
-
-			texU = texSu;
-			texV = texSv;
-
-			float tStep = 1.0f / ((float)(bx - ax));
-			float t = 0.0f; // where
-
-			for (int x = ax; x < bx; x++)
-			{
-				texU = (1.0f - t) * texSu + t * texEu;
-				texV = (1.0f - t) * texSu + t * texEv;
-
-				
-
-				//draw
-
-				auto c = sampleTexture(vector2(texU, texEv),texture);
-				al_draw_pixel(x, y, al_map_rgb(c.r, c.g, c.b));
-
-
-				t += tStep;
-			}
-		}
-		// bottom tri
-			
-		dy1 = y3 - y2;
-		dx1 = x3 - x2;
-		dv1 = v3 - v2;
-		du1 = u3 - u2;
-
-		if (dy1) daxStep = dx1 / (float)abs(dy1);
-		if(dy2) dbxStep = dx2 / (float)abs(dy2);
-
-		du1Step = 0.0f;
-		dv1Step = 0.0f;
-
-		if (dy1) du1Step = du1 / (float)abs(dy1);
-		if (dy2) dv1Step = dv1 / (float)abs(dy2);
-
-
-
-		for (int y = y2; y <= y3; y++)
-		{
-			int ax = x2 + (float)(y - y2) * daxStep;
-			int bx = x1 + (float)(y - y1) * dbxStep;
-
-			float texSu = u2 + (float)(y - y2) * du1Step; //starting values
-			float texSv = v2 + (float)(y - y2) * dv1Step;
-
-			float texEu = u1 + (float)(y - y1) * du2Step;
-			float texEv = v1 + (float)(y - y1) * du2Step;//ending values
-
-			if (ax > bx)
-			{
-				std::swap(ax, bx);
-				std::swap(texSu, texEu);
-				std::swap(texSv, texEv);
-			}
-
-			texU = texSu;
-			texV = texSv;
-
-			float tStep = 1.0f / ((float)(bx - ax));
-			float t = 0.0f; // where
-
-			for (int x = ax; x < bx; x++)
-			{
-				texU = (1.0f - t) * texSu + t * texEu;
-				texV = (1.0f - t) * texSu + t * texEv;
-
-
-
-				//draw
-
-			//	auto c = sampleTexture(Vector2(texU, texEv), texture);
-				//al_draw_pixel(x, y, al_map_rgb(c.r, c.g, c.b));
-				al_draw_pixel(x, y, al_map_rgb(255, 255, 255));
-
-				t += tStep;
-			}
-		}
-	}
-}	
-
-
 void degToRad(vector3& v)
 {
 	v = vector3(degToRad(v.x), degToRad(v.y), radToDeg(v.z));
@@ -1183,4 +989,7 @@ void unNormalizeUvs(Triangle& tri,Texture t)
 struct sceneDesc
 {
 	vector<Mesh> geometry;
+
+	vector<pointLight> pLights;
+	directionLight dirLight;
 };

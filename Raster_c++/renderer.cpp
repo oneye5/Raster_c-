@@ -17,12 +17,8 @@ float aspectRatio;
 
 
 Matrix4x4 projMatrix;
- directionLight dirLight;
- vector<pointLight> pointLights;
-
  vector3 camPos;
  vector3 camRot = vector3(0.0f, 0.0f, 1.0f);
-
  sceneDesc sceneMain;
 
 void ViewPort::InitViewPort(int ScreenWidth, int ScreenHeight)
@@ -39,78 +35,82 @@ void ViewPort::InitGeometry()
 	sceneMain = sceneDesc();
 	Mesh mesh = Mesh();
 //	mesh.loadFromObj("test.obj");
-	mesh.loadFromFile("worldP1.obj");
+	vector3 rot = vector3(degToRad(180), degToRad(0), degToRad(0));
+
+	mesh.loadFromFile("world1.obj");
 	sceneMain.geometry.push_back(mesh);
 	sceneMain.geometry[0].init(0);
-	sceneMain.geometry[0].rot = vector3(degToRad(90), degToRad(0), degToRad(0));
+	sceneMain.geometry[0].rot = rot;
 
 	mesh = Mesh();
-	mesh.loadFromFile("worldP2.obj");
+	mesh.loadFromFile("world2.obj");
 	sceneMain.geometry.push_back(mesh);
 	sceneMain.geometry[1].init(1);
-	sceneMain.geometry[1].rot = vector3(degToRad(90), degToRad(0), degToRad(0));
+	sceneMain.geometry[1].rot = rot;
 
 	mesh = Mesh();
-	mesh.loadFromFile("worldP3.obj");
+	mesh.loadFromFile("world3.obj");
 	sceneMain.geometry.push_back(mesh);
 	sceneMain.geometry[2].init(2);
-	sceneMain.geometry[2].rot = vector3(degToRad(90), degToRad(0), degToRad(0));
+	sceneMain.geometry[2].rot = rot;
 
 	mesh = Mesh();
-	mesh.loadFromFile("worldP4.obj");
+	mesh.loadFromFile("world4.obj");
 	sceneMain.geometry.push_back(mesh);
 	sceneMain.geometry[3].init(3);
-	sceneMain.geometry[3].rot = vector3(degToRad(90), degToRad(0), degToRad(0));
-//	std::cout <<"parent mesh " << sceneMain.geometry[0].triangles[0].parentMesh<<" ";
+	sceneMain.geometry[3].rot = rot;
+
+	mesh = Mesh();
+	mesh.loadFromFile("world5.obj");
+	sceneMain.geometry.push_back(mesh);
+	sceneMain.geometry[4].init(4);
+	sceneMain.geometry[4].rot = rot;
+
+	mesh = Mesh();
+	mesh.loadFromFile("world6.obj");
+	sceneMain.geometry.push_back(mesh);
+	sceneMain.geometry[5].init(5);
+	sceneMain.geometry[5].rot = rot;
+//	std::cout <<"parent5mesh " << sceneMain.geometry[0].triangles[0].parentMesh<<" ";
 	//init lights --
 
-	dirLight = directionLight();
-	dirLight.lumens = 70.0f;
+ auto	dirLight = directionLight();
+	dirLight.lumens = 10.0f;
 	dirLight.ambientMulti = 0.5f;
 	dirLight.dir = vector3(0.5f, -1.0f, 0.5f);
 	dirLight.color = Color((unsigned char)255, (unsigned char)100, (unsigned char)200);
 
-	pointLights.push_back(pointLight()); //sphereL
-	pointLights[0].color = Color((unsigned char)200, (unsigned char)200, (unsigned char)255);
-	pointLights[0].lumens = 400.0f;
-	pointLights[0].range = 10.0f;
-	pointLights[0].pos = vector3(-3.29036f, -1.16f, -11.601f);
+	sceneMain.dirLight = dirLight;
 
-	pointLights.push_back(pointLight());  // hallL
-	pointLights[1].color = Color((unsigned char)200, (unsigned char)255, (unsigned char)255);
-	pointLights[1].lumens = 100.0f;
-	pointLights[1].range = 4.0f;
-	pointLights[1].pos = vector3(1.64197f, -1.0f, 0.297399f);
-
-	pointLights.push_back(pointLight()); // tree
-	pointLights[2].color = Color((unsigned char)255, (unsigned char)0, (unsigned char)200);
-	pointLights[2].lumens = 400.0f;
-	pointLights[2].range = 20.0f;
-	pointLights[2].pos = vector3(35.4461f, -1.955f, 14.3487f);
-
-	pointLights.push_back(pointLight()); // tree2
-	pointLights[3].color = Color((unsigned char)255, (unsigned char)0, (unsigned char)200);
-	pointLights[3].lumens = 400.0f;
-	pointLights[3].range = 20.0f;
-	pointLights[3].pos = vector3(26.5184f, -7.04521f, 27.903f);
-
-	pointLights.push_back(pointLight()); //highlight
-	pointLights[4].color = Color((unsigned char)255, (unsigned char)255, (unsigned char)200);
-	pointLights[4].lumens = 500.0f;
-	pointLights[4].range = 100.0f;
-	pointLights[4].pos = vector3(16.5254f, -9.56f, 18.3688f);
-
-	pointLights.push_back(pointLight()); //CITY LIGHT
-	pointLights[5].color = Color((unsigned char)255, (unsigned char)0, (unsigned char)200);
-	pointLights[5].lumens = 500.0f;
-	pointLights[5].range = 100.0f;
-	pointLights[5].pos = vector3(73.5361f, -4.59f, 37.8652f);
+	auto pLight = pointLight();
+	pLight.color = Color((unsigned char)200, (unsigned char)255, (unsigned char)255);
+	pLight.lumens = 2000.0f;
+	pLight.pos = vector3(0.356367f, -9.39999f, 3.78953f);
+	pLight.range = 1000.0f;
+	sceneMain.pLights.push_back(pLight);
 	
-	pointLights.push_back(pointLight()); //CITY LIGHT 2
-	pointLights[6].color = Color((unsigned char)100, (unsigned char)240, (unsigned char)255);
-	pointLights[6].lumens = 500.0f;
-	pointLights[6].range = 100.0f;
-	pointLights[6].pos = vector3(80.5604f, -5.55999f, 8.2133f);
+
+	pLight = pointLight();
+	pLight.color = Color((unsigned char)255, (unsigned char)100, (unsigned char)255);
+	pLight.lumens = 2000.0f;
+	pLight.pos = vector3(-55.9074f, -14.4f, 8.11035f);
+	pLight.range = 1000.0f;
+	sceneMain.pLights.push_back(pLight);
+
+	
+	pLight = pointLight();
+	pLight.color = Color((unsigned char)255, (unsigned char)255, (unsigned char)255);
+	pLight.lumens = 2000.0f;
+	pLight.pos = vector3(-50.0582f, -94.7f, 56.3013f);
+	pLight.range = 50000.0f;
+	sceneMain.pLights.push_back(pLight);
+
+	pLight = pointLight();
+	pLight.color = Color((unsigned char)255, (unsigned char)255, (unsigned char)255);
+	pLight.lumens = 20000.0f;
+	pLight.pos = vector3(-51.6908f, -129.65f, 135.17f);
+	pLight.range = 50000.0f;
+	sceneMain.pLights.push_back(pLight);
 }
 
 std::vector<std::future<void>> futures;
@@ -218,15 +218,15 @@ void calculateBatch(vector<Triangle> tris, int from,int to,vector<Triangle>* toR
 			triColInfo colinfo = triColInfo();
 			vector<Color>  colors;
 
-			vector3 direction = dirLight.dir;
+			vector3 direction = sceneMain.dirLight.dir;
 			toNormalized(direction);
 			float dotPod = toDotProduct(direction, norm);
-			float brightness = dotPod * dirLight.lumens;
-			brightness += dirLight.ambientMulti * dirLight.lumens;
+			float brightness = dotPod * sceneMain.dirLight.lumens;
+			brightness += sceneMain.dirLight.ambientMulti * sceneMain.dirLight.lumens;
 
-			float r = dirLight.color.r; r = r / 255.0f; r *= brightness; r = clamp(r, 0, 255, true);
-			float g = dirLight.color.g; g = g / 255.0f; g *= brightness; g = clamp(g, 0, 255, true);
-			float b = dirLight.color.b; b = b / 255.0f; b *= brightness; b = clamp(b, 0, 255, true);
+			float r = sceneMain.dirLight.color.r; r = r / 255.0f; r *= brightness; r = clamp(r, 0, 255, true);
+			float g = sceneMain.dirLight.color.g; g = g / 255.0f; g *= brightness; g = clamp(g, 0, 255, true);
+			float b = sceneMain.dirLight.color.b; b = b / 255.0f; b *= brightness; b = clamp(b, 0, 255, true);
 
 			colors.push_back(Color(r, g, b)); colors.push_back(Color(r, g, b)); colors.push_back(Color(r, g, b));
 
@@ -234,7 +234,7 @@ void calculateBatch(vector<Triangle> tris, int from,int to,vector<Triangle>* toR
 			{
 				Color vertCol;
 				vector3 vertPos = tri.verticies[i];
-				for (auto& x : pointLights)
+				for (auto& x : sceneMain.pLights)
 				{
 					float dist = getDistance(x.pos, vertPos);
 
@@ -426,9 +426,9 @@ void ViewPort::camSetRot(float x, float y, float z)
 
 void ViewPort::setLightPos(int index,float x, float y, float z)
 {
-	auto& pl = pointLights[index];
+	//auto& pl = pointLights[index];
 
-	pl.pos = vector3(x, y, z);
+	//pl.pos = vector3(x, y, z);
 }
 
 #pragma endregion

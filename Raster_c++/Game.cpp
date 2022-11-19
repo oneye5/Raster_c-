@@ -4,7 +4,7 @@
 #include<windows.system.threading.h>
 
 ViewPort vp = ViewPort();
-vector3 gameCamPos = vector3(0.0f,-4.0f,10.0f);
+vector3 gameCamPos = vector3(-19.5808f, -4.0f, -6.00419f);
 vector3 gameCamRot = vector3(0.0f,-90.0f,0.0f);
 Input input = Input();
 vector3 moveMulti = vector3(0.05f, 0.05f, 0.05f);

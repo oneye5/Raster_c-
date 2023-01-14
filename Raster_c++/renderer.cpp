@@ -35,82 +35,91 @@ void ViewPort::InitGeometry()
 	sceneMain = sceneDesc();
 	Mesh mesh = Mesh();
 //	mesh.loadFromObj("test.obj");
+	int i = 0;
 	vector3 rot = vector3(degToRad(180), degToRad(0), degToRad(0));
-
+	/*
 	mesh.loadFromFile("world1.obj");
 	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[0].init(0);
-	sceneMain.geometry[0].rot = rot;
+	sceneMain.geometry[i].init(i);
+	sceneMain.geometry[i].rot = rot;
+	i++;
 
 	mesh = Mesh();
 	mesh.loadFromFile("world2.obj");
 	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[1].init(1);
-	sceneMain.geometry[1].rot = rot;
+	sceneMain.geometry[i].init(i);
+	sceneMain.geometry[i].rot = rot;
+	i++;
 
 	mesh = Mesh();
 	mesh.loadFromFile("world3.obj");
 	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[2].init(2);
-	sceneMain.geometry[2].rot = rot;
+	sceneMain.geometry[i].init(i);
+	sceneMain.geometry[i].rot = rot;
+	i++;
 
 	mesh = Mesh();
 	mesh.loadFromFile("world4.obj");
 	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[3].init(3);
-	sceneMain.geometry[3].rot = rot;
+	sceneMain.geometry[i].init(i);
+	sceneMain.geometry[i].rot = rot;
+	i++;
 
 	mesh = Mesh();
 	mesh.loadFromFile("world5.obj");
 	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[4].init(4);
-	sceneMain.geometry[4].rot = rot;
+	sceneMain.geometry[i].init(i);
+	sceneMain.geometry[i].rot = rot;
+	i++;
 
 	mesh = Mesh();
 	mesh.loadFromFile("world6.obj");
 	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[5].init(5);
-	sceneMain.geometry[5].rot = rot;
+	sceneMain.geometry[i].init(i);
+	sceneMain.geometry[i].rot = rot;
+	i++;
+	*/
+
+
+
+	mesh = Mesh();
+	mesh.loadFromFile("world_2_1.obj");
+	sceneMain.geometry.push_back(mesh);
+	sceneMain.geometry[i].init(i);
+	sceneMain.geometry[i].rot = rot;
+	i++;
+
+	mesh = Mesh();
+	mesh.loadFromFile("world_2_2.obj");
+	sceneMain.geometry.push_back(mesh);
+	sceneMain.geometry[i].init(i);
+	sceneMain.geometry[i].rot = rot;
+	i++;
 //	std::cout <<"parent5mesh " << sceneMain.geometry[0].triangles[0].parentMesh<<" ";
 	//init lights --
 
  auto	dirLight = directionLight();
-	dirLight.lumens = 10.0f;
+	dirLight.lumens = 100.0f;
 	dirLight.ambientMulti = 0.5f;
 	dirLight.dir = vector3(0.5f, -1.0f, 0.5f);
-	dirLight.color = Color((unsigned char)255, (unsigned char)100, (unsigned char)200);
+	dirLight.color = Color((unsigned char)255, (unsigned char)200, (unsigned char)200);
 
 	sceneMain.dirLight = dirLight;
 
 	auto pLight = pointLight();
 	pLight.color = Color((unsigned char)200, (unsigned char)255, (unsigned char)255);
-	pLight.lumens = 2000.0f;
-	pLight.pos = vector3(0.356367f, -9.39999f, 3.78953f);
-	pLight.range = 1000.0f;
-	sceneMain.pLights.push_back(pLight);
-	
-
-	pLight = pointLight();
-	pLight.color = Color((unsigned char)255, (unsigned char)100, (unsigned char)255);
-	pLight.lumens = 2000.0f;
-	pLight.pos = vector3(-55.9074f, -14.4f, 8.11035f);
-	pLight.range = 1000.0f;
-	sceneMain.pLights.push_back(pLight);
-
-	
-	pLight = pointLight();
-	pLight.color = Color((unsigned char)255, (unsigned char)255, (unsigned char)255);
-	pLight.lumens = 2000.0f;
-	pLight.pos = vector3(-50.0582f, -94.7f, 56.3013f);
-	pLight.range = 50000.0f;
-	sceneMain.pLights.push_back(pLight);
-
-	pLight = pointLight();
-	pLight.color = Color((unsigned char)255, (unsigned char)255, (unsigned char)255);
 	pLight.lumens = 20000.0f;
-	pLight.pos = vector3(-51.6908f, -129.65f, 135.17f);
-	pLight.range = 50000.0f;
+	pLight.pos = vector3(97.5971f, -51.55f, 98.7174f);
+	pLight.range = 10000.0f;
 	sceneMain.pLights.push_back(pLight);
+
+	 pLight = pointLight();
+	pLight.color = Color((unsigned char)200, (unsigned char)255, (unsigned char)255);
+	pLight.lumens = 20000.0f;
+	pLight.pos = vector3(97.5971f, -101.55f, 98.7174f);
+	pLight.range = 10000.0f;
+	sceneMain.pLights.push_back(pLight);
+
 }
 
 std::vector<std::future<void>> futures;
@@ -123,7 +132,7 @@ const int BatchCount = 8;
 	2  = 16.32
 	4  = 16.50
 	6  = 16.77
-	8  = 17.19 good sweetspot
+	8  = 17.19 good sweetspot (on a 16 logical core cpu)
 	10 = 16.39
 	12 = 16.88
 	16 = 16.40

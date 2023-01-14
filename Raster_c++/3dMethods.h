@@ -309,6 +309,7 @@ struct Mesh
 	}
 	bool loadFromFile(std::string dir)
 	{
+		std::cout << "loading file " << dir << "\n";
 		dir = modelDir + dir;
 		std::ifstream file(dir);
 		vector<vector4> verticies;
@@ -455,6 +456,7 @@ struct Mesh
 
 				if (uvs.size() > 0)
 				{
+					
 					tri.uvs[0] = uvs[uvI[0] - 1];
 					tri.uvs[1] = uvs[uvI[1] - 1];
 					tri.uvs[2] = uvs[uvI[2] - 1];

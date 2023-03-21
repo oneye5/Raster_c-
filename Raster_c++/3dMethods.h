@@ -218,6 +218,7 @@ struct Triangle
 	vector<vector2> uvs;
 	triColInfo colInfo;
 	int parentMesh;
+	int texture;
 
 	//vector<vector2> textureCoords = vector<vector2>{vector2(),vector2() ,vector2() };
 	float zAve;//average vert depth
@@ -244,7 +245,6 @@ struct Mesh
 	vector3 pos;
 	vector3 rot;
 	vector<Triangle> triangles;
-	int texIndex;
 	Texture texture;
 	std::string name;
 	Mesh(vector<Triangle> tris,vector3 position = vector3(0.0f,0.0f,0.0f) ,vector3 rotation = vector3(0.0f,0.0f,0.0f))
@@ -253,7 +253,7 @@ struct Mesh
 		rot = rotation;
 		triangles = tris;
 	}
-	bool loadFromObj(std::string dir)
+	bool loadFromObj(std::string dir) //not in use
 	{
 		dir = modelDir + dir;
 		std::ifstream f(dir);
@@ -293,6 +293,10 @@ struct Mesh
 			}
 		}
 
+
+
+		//load texture
+
 		std::string matDir;
 		//generate mat dir string
 		for (int i = 0; i < dir.size(); i++)
@@ -307,13 +311,14 @@ struct Mesh
 		bool success = loadTexture(matDir);
 		return success;
 	}
-	bool loadFromFile(std::string dir)
+	bool loadFromFile(std::string dir,int currentTextureCount = 0)
 	{
 		std::cout << "loading file " << dir << "\n";
 		dir = modelDir + dir;
 		std::ifstream file(dir);
 		vector<vector4> verticies;
 		vector<vector2> uvs;
+		vector<int> texIndex;
 
 		if (!file.is_open())
 		{
@@ -330,6 +335,7 @@ struct Mesh
 			//C++ DOES NOT SUPPORT STRINGS IN SWITCH STATEMENTS >:(((((((((
 			if (prefix == "v ")
 			{
+				texIndex.push_back(currentTextureCount);
 				vector<float> args;
 				vector4 v = vector4();
 				std::string arg;
@@ -357,6 +363,10 @@ struct Mesh
 				v.w = 1.0f;
 
 				verticies.push_back(v);
+			}
+			else if (prefix == "us") //usemtl
+			{
+				currentTextureCount++;
 			}
 			else if(prefix == "vt")
 			{
@@ -453,6 +463,7 @@ struct Mesh
 				tri.verticies[0] = verticies[vertI[0]-1];
 				tri.verticies[1] = verticies[vertI[1]-1];
 				tri.verticies[2] = verticies[vertI[2]-1];
+				tri.texture = texIndex[vertI[0] - 1];
 
 				if (uvs.size() > 0)
 				{

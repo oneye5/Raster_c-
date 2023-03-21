@@ -21,6 +21,13 @@ Matrix4x4 projMatrix;
  vector3 camRot = vector3(0.0f, 0.0f, 1.0f);
  sceneDesc sceneMain;
 
+ vector<Texture> Textures;
+
+ int textureLoadMode = 0; 
+ //0 = one texture per mesh, texture file should be in the same dir as the mesh
+ //1 = multiple textures per mesh, each texture part of the mesh must be assigned manually
+
+
 void ViewPort::InitViewPort(int ScreenWidth, int ScreenHeight)
 {
 	screenWidth = ScreenWidth;
@@ -34,51 +41,9 @@ void ViewPort::InitGeometry()
 {
 	sceneMain = sceneDesc();
 	Mesh mesh = Mesh();
-//	mesh.loadFromObj("test.obj");
+
 	int i = 0;
 	vector3 rot = vector3(degToRad(180), degToRad(0), degToRad(0));
-	/*
-	mesh.loadFromFile("world1.obj");
-	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[i].init(i);
-	sceneMain.geometry[i].rot = rot;
-	i++;
-
-	mesh = Mesh();
-	mesh.loadFromFile("world2.obj");
-	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[i].init(i);
-	sceneMain.geometry[i].rot = rot;
-	i++;
-
-	mesh = Mesh();
-	mesh.loadFromFile("world3.obj");
-	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[i].init(i);
-	sceneMain.geometry[i].rot = rot;
-	i++;
-
-	mesh = Mesh();
-	mesh.loadFromFile("world4.obj");
-	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[i].init(i);
-	sceneMain.geometry[i].rot = rot;
-	i++;
-
-	mesh = Mesh();
-	mesh.loadFromFile("world5.obj");
-	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[i].init(i);
-	sceneMain.geometry[i].rot = rot;
-	i++;
-
-	mesh = Mesh();
-	mesh.loadFromFile("world6.obj");
-	sceneMain.geometry.push_back(mesh);
-	sceneMain.geometry[i].init(i);
-	sceneMain.geometry[i].rot = rot;
-	i++;
-	*/
 
 
 
@@ -87,7 +52,7 @@ void ViewPort::InitGeometry()
 	sceneMain.geometry.push_back(mesh);
 	sceneMain.geometry[i].init(i);
 	sceneMain.geometry[i].rot = rot;
-	i++;
+	i++; 
 
 	mesh = Mesh();
 	mesh.loadFromFile("world_2_2.obj");
@@ -95,7 +60,10 @@ void ViewPort::InitGeometry()
 	sceneMain.geometry[i].init(i);
 	sceneMain.geometry[i].rot = rot;
 	i++;
-//	std::cout <<"parent5mesh " << sceneMain.geometry[0].triangles[0].parentMesh<<" ";
+
+
+	
+
 	//init lights --
 
  auto	dirLight = directionLight();
